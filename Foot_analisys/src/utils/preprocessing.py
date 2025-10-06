@@ -1,67 +1,72 @@
 import os
 import pandas as pd
 
-# Папка проекта
+# Пути
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+input_file = os.path.join(BASE_DIR, "data/processed/all_matches.csv")
+output_file = os.path.join(BASE_DIR, "data/processed/train_dataset.csv")
 
-# Исходные данные
-input_root = os.path.join(BASE_DIR, "data/raw")
-# Папка для обработанных данных
-processed_root = os.path.join(BASE_DIR, "data/processed")
-os.makedirs(processed_root, exist_ok=True)
+# Загружаем данные
+df = pd.read_csv(input_file, parse_dates=['Date'], dayfirst=True)
 
-# Столбцы, которые оставляем
-columns_to_keep = [
-    "Date", "Time",
-    "HomeTeam", "AwayTeam",
-    "FTHG", "FTAG", "FTR",
-    "HS", "AS", "HST", "AST",
-    "HF", "AF", "HC", "AC",
-    "HY", "AY", "HR", "AR"
-]
+# Колонки статистики для усреднения
+stat_cols = ['HS', 'AS', 'HST', 'AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR']
 
-# Список для объединения всех CSV
-all_dfs = []
+features_list = []
 
-# Проходим по всем лигам
-for league in os.listdir(input_root):
-    league_path = os.path.join(input_root, league)
-    if not os.path.isdir(league_path):
+# Сортируем по дате для удобства
+df = df.sort_values('Date')
+
+for idx, row in df.iterrows():
+    home = row['HomeTeam']
+    away = row['AwayTeam']
+    match_date = row['Date']
+
+    # последние 5 матчей команды-хозяина
+    home_past = df[((df['HomeTeam']==home) | (df['AwayTeam']==home)) & (df['Date'] < match_date)].sort_values('Date', ascending=False).head(5)
+    if len(home_past) < 5:
         continue
 
-    output_league_path = os.path.join(processed_root, league)
-    os.makedirs(output_league_path, exist_ok=True)
+    # последние 5 матчей команды-гостя
+    away_past = df[((df['HomeTeam']==away) | (df['AwayTeam']==away)) & (df['Date'] < match_date)].sort_values('Date', ascending=False).head(5)
+    if len(away_past) < 5:
+        continue
 
-    # Проходим по всем сезонам
-    for file in os.listdir(league_path):
-        if not file.endswith(".csv"):
-            continue
-        file_path = os.path.join(league_path, file)
-        df = pd.read_csv(file_path)
+    # последние 5 H2H
+    h2h = df[
+        (((df['HomeTeam']==home) & (df['AwayTeam']==away)) |
+         ((df['HomeTeam']==away) & (df['AwayTeam']==home))) &
+        (df['Date'] < match_date)
+    ].sort_values('Date', ascending=False).head(5)
+    if len(h2h) < 5:
+        continue
 
-        # Оставляем только существующие нужные столбцы
-        existing_cols = [col for col in columns_to_keep if col in df.columns]
-        df = df[existing_cols]
+    # Средние фичи последних 5 матчей команды-хозяина
+    home_features = {f'Home_{col}_avg_5': home_past.apply(lambda x: x[col] if x.name in home_past.index else x[col], axis=1).mean() for col in stat_cols}
 
-        # Сохраняем отдельный CSV
-        output_file = os.path.join(output_league_path, file)
-        df.to_csv(output_file, index=False)
+    # Средние фичи последних 5 матчей команды-гостя
+    away_features = {f'Away_{col}_avg_5': away_past.apply(lambda x: x[col] if x.name in away_past.index else x[col], axis=1).mean() for col in stat_cols}
 
-        # Добавляем в общий список для объединения
-        all_dfs.append(df)
-        print(f"Обработан файл: {file_path}, оставлено {len(existing_cols)} колонок")
+    # Средние фичи H2H
+    h2h_features = {f'H2H_{col}_avg_5': h2h[col].mean() for col in ['FTHG', 'FTAG']}
 
-# Объединяем все в один DataFrame
-full_df = pd.concat(all_dfs, ignore_index=True)
+    # Собираем все в один словарь
+    features = {
+        'Date': match_date,
+        'Time': row.get('Time', None),
+        'HomeTeam': home,
+        'AwayTeam': away,
+        'FTR': row['FTR']
+    }
+    features.update(home_features)
+    features.update(away_features)
+    features.update(h2h_features)
 
-# Преобразуем дату в datetime для сортировки
-full_df['Date'] = pd.to_datetime(full_df['Date'], errors='coerce', dayfirst=True)
+    features_list.append(features)
 
-# Сортируем по дате
-full_df = full_df.sort_values(by='Date').reset_index(drop=True)
+# Создаем итоговый DataFrame
+train_df = pd.DataFrame(features_list)
 
-# Сохраняем объединённый CSV
-full_dataset_path = os.path.join(processed_root, "all_matches.csv")
-full_df.to_csv(full_dataset_path, index=False)
-
-print("Все файлы объединены в один датасет:", full_dataset_path)
+# Сохраняем в CSV
+train_df.to_csv(output_file, index=False)
+print("Готовый датасет для обучения сохранен:", output_file)
