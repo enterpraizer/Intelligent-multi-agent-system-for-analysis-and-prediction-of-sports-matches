@@ -61,7 +61,7 @@ def train_all_models(dataset_path: str, models_dir: str, n_estimators: int = 200
         print(f"MAE для {target}: {mae:.2f}")
 
         # Сохраняем модель
-        model_path = os.path.join(models_dir, f"{target}_xgb_model.pkl")
+        model_path = os.path.join(models_dir, f"{target}.pkl")
         joblib.dump(model, model_path)
 
         # Для анализа
