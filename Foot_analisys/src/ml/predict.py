@@ -8,10 +8,18 @@ class MatchPredictor:
     """
 
     def __init__(self, models_dir=None):
-        if models_dir is None:
-            # По умолчанию смотрим в папку ml/models
-            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-            models_dir = os.path.join(base_dir, "models")
+
+            # Ищем корень проекта по наличию папки 'models'
+        curr_dir = os.path.abspath(os.path.dirname(__file__))
+        while True:
+            if os.path.exists(os.path.join(curr_dir, "models")):
+                models_dir = os.path.join(curr_dir, "models")
+                break
+            parent = os.path.dirname(curr_dir)
+            if parent == curr_dir:
+                raise FileNotFoundError("Не удалось найти папку 'models' в корне проекта")
+            curr_dir = parent
+
         self.models_dir = models_dir
         self.models = {}
         self.target_cols = [
@@ -24,38 +32,23 @@ class MatchPredictor:
 
     def _load_models(self):
         """Загружаем все модели из папки"""
+        print(f"🔍 Ищем модели в: {self.models_dir}")
         for target in self.target_cols:
-            model_path = os.path.join(self.models_dir, f"{target}.joblib")
+            model_path = os.path.join(self.models_dir, f"{target}.pkl")
             if os.path.exists(model_path):
                 self.models[target] = joblib.load(model_path)
+                print(f"✅ Загружена модель: {target}")
             else:
-                print(f"[Warning] Модель для {target} не найдена в {model_path}")
+                print(f"⚠️ Модель для {target} не найдена ({model_path})")
 
     def predict_match(self, match_features: pd.DataFrame):
-        """
-        Предсказывает статистику для одного матча.
-        match_features: pd.DataFrame с одной строкой (X-фичи)
-        Возвращает dict {target: prediction}
-        """
+        """Предсказывает статистику для одного матча"""
         predictions = {}
         for target, model in self.models.items():
-            if target in match_features.columns:
-                # Убираем целевую колонку из фичей
-                X = match_features.drop(columns=[target], errors='ignore')
-            else:
-                X = match_features
-            pred = model.predict(X)[0]
-            predictions[target] = pred
+            X = match_features.drop(columns=[target], errors='ignore')
+            predictions[target] = model.predict(X)[0]
         return predictions
 
     def predict_batch(self, df_features: pd.DataFrame):
-        """
-        Предсказывает статистику для батча матчей.
-        Возвращает DataFrame с предсказанными значениями.
-        """
-        all_preds = []
-        for i, row in df_features.iterrows():
-            row_df = pd.DataFrame([row])
-            preds = self.predict_match(row_df)
-            all_preds.append(preds)
-        return pd.DataFrame(all_preds)
+        """Предсказывает статистику для батча матчей"""
+        return pd.DataFrame([self.predict_match(pd.DataFrame([row])) for _, row in df_features.iterrows()])

@@ -42,7 +42,7 @@ for league in os.listdir(input_root):
         # Оставляем только существующие нужные столбцы
         existing_cols = [col for col in columns_to_keep if col in df.columns]
         df = df[existing_cols]
-
+        df['league'] = league
         # Сохраняем отдельный CSV
         output_file = os.path.join(output_league_path, file)
         df.to_csv(output_file, index=False)
@@ -54,11 +54,36 @@ for league in os.listdir(input_root):
 # Объединяем все в один DataFrame
 full_df = pd.concat(all_dfs, ignore_index=True)
 
-# Преобразуем дату в datetime для сортировки
-full_df['Date'] = pd.to_datetime(full_df['Date'], errors='coerce', dayfirst=True)
+def fix_two_digit_year(date_str):
+    """Преобразует даты с двухзначным годом в формат DD/MM/YYYY"""
+    if pd.isna(date_str):  # пропуски оставляем как есть
+        return date_str
+    date_str = str(date_str).strip()
+    parts = date_str.split('/')
+    if len(parts) != 3:
+        return date_str  # если формат неправильный, возвращаем как есть
+    day, month, year = parts
+    if len(year) == 2:
+        # добавляем "20" перед годом, если год <= 50, иначе "19"
+        year_int = int(year)
+        if year_int <= 50:
+            year = f"20{year}"
+        else:
+            year = f"19{year}"
+    return f"{day}/{month}/{year}"
 
-# Сортируем по дате
+# 1. Привести всё к строкам и убрать лишние пробелы
+full_df['Date'] = full_df['Date'].astype(str).str.strip()
+
+full_df['Date'] = full_df['Date'].apply(fix_two_digit_year)
+
+# 2. Преобразовать с dayfirst=True (европейский формат)
+full_df['Date'] = pd.to_datetime(full_df['Date'], dayfirst=True)
+
+# 3. Сортировка по дате
 full_df = full_df.sort_values(by='Date').reset_index(drop=True)
+
+
 
 # Сохраняем объединённый CSV
 full_dataset_path = os.path.join(processed_root, "all_matches.csv")
