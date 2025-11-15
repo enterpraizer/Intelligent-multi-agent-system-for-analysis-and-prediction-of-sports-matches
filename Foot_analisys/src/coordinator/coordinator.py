@@ -8,9 +8,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.agents.analyst import AnalystAgent
-from src.agents.predictor import PredictorAgent
-from src.agents.reporter import ReporterAgent
+from Foot_analisys.src.agents.analyst import AnalystAgent
+from Foot_analisys.src.agents.predictor import PredictorAgent
+from Foot_analisys.src.agents.reporter import ReporterAgent
 from typing import Dict
 
 logger = logging.getLogger(__name__)

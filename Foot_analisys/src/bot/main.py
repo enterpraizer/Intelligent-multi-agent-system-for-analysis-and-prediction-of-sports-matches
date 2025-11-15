@@ -10,7 +10,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 import logging
 from telegram.ext import ApplicationBuilder
-from src.bot.handlers import register_handlers
+from Foot_analisys.src.bot.handlers import register_handlers
 
 # Настройка логирования
 logging.basicConfig(

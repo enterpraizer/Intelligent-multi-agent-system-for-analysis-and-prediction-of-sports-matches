@@ -10,8 +10,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
-from src.bot.messages import START_MESSAGE, NEXT_MATCH_MESSAGE, REPORT_MESSAGE
-from src.coordinator.coordinator import MatchCoordinator
+from Foot_analisys.src.bot.messages import START_MESSAGE, NEXT_MATCH_MESSAGE, REPORT_MESSAGE
+from Foot_analisys.src.coordinator.coordinator import MatchCoordinator
 import logging
 
 logger = logging.getLogger(__name__)

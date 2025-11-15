@@ -6,7 +6,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.ml.predict import MatchPredictor
+from Foot_analisys.src.ml.predict import MatchPredictor
 import pandas as pd
 from typing import Dict
 import logging
