@@ -27,7 +27,6 @@
 - **Football-data.org**
 
 База URL: https://api.football-data.org/v4
-Ключ: 8b9004850ee441d7be14912d5a97a698
 Эндпоинты:
 GET /teams/{id} - информация о команде
 GET /teams/{id}/matches - матчи команды
