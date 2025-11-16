@@ -4,6 +4,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 
+from Foot_analisys.src.bot.handlers.about_handlers import show_about_menu, refresh_system_data, show_system_status
 from Foot_analisys.src.bot.handlers.favorites_handlers import show_favorites_menu, clear_favorites, toggle_favorite_team
 from Foot_analisys.src.bot.handlers.menu_handlers import (
     show_main_menu, show_stats_menu, show_settings_menu, show_prediction_menu
@@ -14,7 +15,7 @@ from Foot_analisys.src.bot.handlers.schedule_handlers import (
 from Foot_analisys.src.bot.handlers.prediction_handlers import (
     start_quick_prediction, start_detailed_prediction, start_llm_prediction,
     show_league_matches_for_quick_prediction, show_league_matches_for_detailed_prediction,
-    process_match_selection, save_user_prediction_handler
+    process_match_selection, save_user_prediction_handler, show_league_matches_for_llm_prediction, process_llm_analysis
 )
 from Foot_analisys.src.bot.handlers.settings_handlers import show_notifications_settings, toggle_notifications, \
     set_notification_time
@@ -120,6 +121,24 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith('notifications_time_'):
         await set_notification_time(update, context)
+
+    elif data == "prediction_llm":
+        await start_llm_prediction(update, context)
+
+    elif data.startswith('llm_league_'):
+        await show_league_matches_for_llm_prediction(update, context)
+
+    elif data.startswith('llm_match_'):
+        await process_llm_analysis(update, context)
+
+    elif data == "menu_about":
+        await show_about_menu(update, context)
+
+    elif data == "refresh_system":
+        await refresh_system_data(update, context)
+
+    elif data == "system_status":
+        await show_system_status(update, context)
 
     elif data.startswith('stats_league_') and '_page_' not in data:
         await show_teams_by_league(update, context)

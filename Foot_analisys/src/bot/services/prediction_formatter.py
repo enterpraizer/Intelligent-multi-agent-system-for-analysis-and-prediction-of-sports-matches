@@ -41,6 +41,9 @@ def format_quick_prediction(result: dict) -> str:
 """
     return report
 
+
+# services/prediction_formatter.py - ИСПРАВЛЯЕМ ЛОГИКУ РЕЗУЛЬТАТА
+
 def format_detailed_prediction(result: dict) -> str:
     """Форматирует детальный прогноз в старом стиле"""
     predictions = result['predictions']
@@ -49,20 +52,29 @@ def format_detailed_prediction(result: dict) -> str:
 
     home_goals = round(predictions.get('Target_FTHG', 1.5), 1)
     away_goals = round(predictions.get('Target_FTAG', 1.2), 1)
-    score = f"{int(round(home_goals))}:{int(round(away_goals))}"
 
-    # Вероятности
+    # ИСПРАВЛЕНИЕ: Правильно определяем результат
+    home_goals_int = int(round(home_goals))
+    away_goals_int = int(round(away_goals))
+    score = f"{home_goals_int}:{away_goals_int}"
+
+    # Правильное определение результата
+    if home_goals_int > away_goals_int:
+        result_text = "Победа хозяев"
+    elif away_goals_int > home_goals_int:
+        result_text = "Победа гостей"
+    else:
+        result_text = "🤝 Ничья"
+
+    # Вероятности (оставляем вашу текущую логику)
     goal_diff = home_goals - away_goals
     if goal_diff > 0.5:
-        result_text = "Победа хозяев"
         home_prob = min(85, 50 + goal_diff * 15)
         away_prob = max(5, 20 - goal_diff * 10)
     elif goal_diff < -0.5:
-        result_text = "Победа гостей"
         away_prob = min(85, 50 - goal_diff * 15)
         home_prob = max(5, 20 + goal_diff * 10)
     else:
-        result_text = "🤝 Ничья"
         home_prob = 35
         away_prob = 35
 

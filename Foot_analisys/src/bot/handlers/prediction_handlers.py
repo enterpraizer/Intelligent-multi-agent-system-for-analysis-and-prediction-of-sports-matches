@@ -8,6 +8,7 @@ from Foot_analisys.src.bot.services.team_mapper import team_mapper
 from Foot_analisys.src.bot.services.prediction_formatter import format_quick_prediction, format_detailed_prediction
 from Foot_analisys.src.bot.utils.user_data import save_user_prediction
 from Foot_analisys.src.coordinator.coordinator import MatchCoordinator
+from Foot_analisys.src.bot.services.llm_analysis_service import llm_analysis_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -312,6 +313,164 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
 
     await update.message.reply_text(status_text)
+
+
+async def start_llm_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Начало LLM прогноза - выбор матча из расписания"""
+    keyboard = []
+    leagues = list(schedule_service.LEAGUE_IDS.keys())
+
+    for i in range(0, len(leagues), 2):
+        row = []
+        row.append(InlineKeyboardButton(leagues[i], callback_data=f"llm_league_{i}"))
+        if i + 1 < len(leagues):
+            row.append(InlineKeyboardButton(leagues[i + 1], callback_data=f"llm_league_{i + 1}"))
+        keyboard.append(row)
+
+    keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu_prediction")])
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.callback_query.edit_message_text(
+        "🤖 <b>Прогноз с LLM-анализом</b>\n\n"
+        "Выберите лигу из расписания для глубокого анализа матча:",
+        reply_markup=reply_markup,
+        parse_mode='HTML'
+    )
+
+
+async def show_league_matches_for_llm_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показать матчи лиги для выбора LLM анализа"""
+    league_idx = int(update.callback_query.data.split('_')[2])
+    leagues = list(schedule_service.LEAGUE_IDS.keys())
+    league_name = leagues[league_idx]
+
+    try:
+        valid_matches, invalid_matches = schedule_service.get_matches_with_valid_mapping(league_name)
+
+        if not valid_matches:
+            await update.callback_query.edit_message_text(
+                f"❌ Нет доступных матчей для анализа в {league_name}.",
+                parse_mode='HTML'
+            )
+            return
+
+        text = f"🤖 <b>LLM анализ - {league_name}</b>\n\n"
+        text += "Выберите матч для глубокого анализа:\n\n"
+
+        keyboard = []
+        for match in valid_matches:
+            button_text = f"🏠 {match['home_team']} vs ✈️ {match['away_team']}"
+            callback_data = f"llm_match_{match['home_team']}_{match['away_team']}"
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+
+        keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="prediction_llm")])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.callback_query.edit_message_text(text, reply_markup=reply_markup, parse_mode='HTML')
+
+    except Exception as e:
+        logger.error(f"Ошибка получения матчей для LLM анализа: {e}")
+        await update.callback_query.edit_message_text(
+            f"❌ Ошибка при получении матчей {league_name}.",
+            parse_mode='HTML'
+        )
+
+
+async def process_llm_analysis(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка LLM анализа матча"""
+    query = update.callback_query
+    data = query.data
+
+    parts = data.split('_')
+    home_team = parts[2]
+    away_team = parts[3]
+
+    # Преобразуем названия команд
+    mapped_home, mapped_away, success, error = team_mapper.validate_mapping(home_team, away_team)
+
+    if not success:
+        await query.edit_message_text(
+            f"❌ <b>Ошибка преобразования названий команд</b>\n\n{error}",
+            parse_mode='HTML'
+        )
+        return
+
+    # Показываем загрузку
+    loading_msg = await query.edit_message_text(
+        f"🤖 <b>Глубокий анализ матча</b>\n\n"
+        f"🏠 {mapped_home} vs ✈️ {mapped_away}\n\n"
+        f"⏳ Собираю данные и анализирую...\n"
+        f"<i>Это может занять 10-15 секунд</i>",
+        parse_mode='HTML'
+    )
+
+    try:
+        # Сначала получаем базовый прогноз
+        if not init_coordinator():
+            await query.edit_message_text("❌ Ошибка инициализации системы.")
+            return
+
+        # Получаем детальный прогноз для анализа
+        result = coordinator.predict_match(mapped_home, mapped_away)
+
+        if not result['success']:
+            await query.edit_message_text(f"❌ Ошибка прогноза: {result.get('error')}")
+            return
+
+        # Получаем LLM анализ
+        analysis = llm_analysis_service.create_match_analysis(
+            mapped_home, mapped_away, result
+        )
+
+        # Создаем детальный прогноз для отображения
+        detailed_report = format_detailed_prediction(result)
+
+        # Извлекаем основную часть детального прогноза
+        detailed_sections = detailed_report.split('━━━━━━━━━━━━━━━━━━━━━━━━')
+        main_prediction = detailed_sections[1] if len(detailed_sections) > 1 else detailed_report
+
+        # Форматируем финальный отчет
+        report = f"""
+🤖 <b>ГЛУБОКИЙ АНАЛИЗ МАТЧА</b>
+
+🏠 {mapped_home} vs ✈️ {mapped_away}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
+
+{main_prediction}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 <b>AI АНАЛИЗ</b>
+
+{analysis}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+💡 <i>Анализ создан с помощью DeepSeek R1 Chimera</i>
+"""
+
+        # Проверяем длину сообщения (Telegram лимит 4096 символов)
+        if len(report) > 4000:
+            report = report[:4000] + "\n\n... (сообщение сокращено)"
+
+        keyboard = [
+            [InlineKeyboardButton("🔄 Новый анализ", callback_data="prediction_llm")],
+            [InlineKeyboardButton("📊 Обычный прогноз", callback_data="prediction_detailed")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(report, reply_markup=reply_markup, parse_mode='HTML')
+
+    except Exception as e:
+        logger.error(f"Ошибка LLM анализа: {e}", exc_info=True)
+        await query.edit_message_text(
+            f"❌ <b>Ошибка анализа</b>\n\n"
+            f"Не удалось выполнить глубокий анализ матча.\n"
+            f"Попробуйте позже или используйте обычный прогноз.",
+            parse_mode='HTML'
+        )
+
 
 def register_prediction_handlers(app):
     """Регистрирует обработчики прогнозов"""

@@ -8,6 +8,7 @@ from .schedule_handlers import register_schedule_handlers
 from .user_handlers import register_user_handlers
 from .stats_handlers import register_stats_handlers
 from .favorites_handlers import register_favorites_handlers
+from .about_handlers import register_about_handlers
 
 def register_all_handlers(app):
     """Регистрирует все обработчики"""
@@ -18,3 +19,4 @@ def register_all_handlers(app):
     register_user_handlers(app)
     register_stats_handlers(app)
     register_favorites_handlers(app)
+    register_about_handlers(app)
