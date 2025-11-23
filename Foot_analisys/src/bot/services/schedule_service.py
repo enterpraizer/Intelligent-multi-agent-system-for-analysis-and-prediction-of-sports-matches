@@ -71,6 +71,9 @@ class ScheduleService:
         away_team = match["awayTeam"]["name"]
         date = datetime.fromisoformat(match["utcDate"].replace("Z", "+00:00"))
 
+        from datetime import timedelta
+        date = date + timedelta(hours=3)
+
         # Пробуем преобразовать названия команд
         mapped_home, mapped_away, success, error = team_mapper.validate_mapping(home_team, away_team)
 
