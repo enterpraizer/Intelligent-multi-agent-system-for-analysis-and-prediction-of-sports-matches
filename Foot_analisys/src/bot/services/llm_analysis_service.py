@@ -12,7 +12,7 @@ class LLMAnalysisService:
     def __init__(self):
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key="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"
+            api_key="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"
         )
         self.model = "tngtech/deepseek-r1t2-chimera:free"
 

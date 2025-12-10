@@ -90,9 +90,10 @@ class SimpleTeamMapper:
 
             # Бундеслига
             "Bayern München": "Bayern Munich",
+            "FC Bayern München": "Bayern Munich",
             "Borussia Dortmund": "Dortmund",
             "Bayer Leverkusen": "Leverkusen",
-            "Borussia M.Gladbach": "M'gladbach",
+            "Borussia Mönchengladbach": "M'gladbach",
             "Mönchengladbach": "M'gladbach",
             "Eintracht Frankfurt": "Ein Frankfurt",
             "Mainz 05": "Mainz",
@@ -208,8 +209,7 @@ class SimpleTeamMapper:
             "Athletic": "Ath Bilbao",
             "Atletico": "Ath Madrid",
             "Atlético": "Ath Madrid",
-            "Bayer": "Leverkusen",
-            "Borussia": "Dortmund",
+            "Bayer 04": "Leverkusen",
             "Eintracht": "Ein Frankfurt",
             "Paris": "Paris SG",
         }

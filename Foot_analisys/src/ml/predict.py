@@ -62,21 +62,23 @@ class MatchPredictor:
                 print(f"⚠️ Модель {target} не найдена ({model_path})")
 
     def _extract_feature_cols(self, df: pd.DataFrame):
-        """
-        Достаём feature_cols как в train_models.py
-        """
-        return [
+        cols = [
             col for col in df.columns
             if col.startswith(("Home_", "Away_", "H2H_")) and col.endswith("_avg")
         ]
+        # добавляем Elo, если есть
+        for c in ["Home_Elo", "Away_Elo", "Diff_Elo"]:
+            if c in df.columns:
+                cols.append(c)
+        return cols
 
     def predict_match(self, match_features: pd.DataFrame):
-        """
-        Предсказывает статистику одного матча (одна строка).
-        """
-
         if self.feature_cols is None:
             self.feature_cols = self._extract_feature_cols(match_features)
+
+        missing = [c for c in self.feature_cols if c not in match_features.columns]
+        if missing:
+            raise ValueError(f"В данных для предсказания нет фич: {missing}")
 
         X = match_features[self.feature_cols]
 
