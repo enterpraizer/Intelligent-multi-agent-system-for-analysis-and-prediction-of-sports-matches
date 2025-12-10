@@ -33,7 +33,8 @@ class AnalystAgent:
     def build_features_for_match(self, home_team: str, away_team: str, last_n: int = 10) -> pd.DataFrame:
         """
         Строит фичи для матча на основе последних N матчей каждой команды и H2H
-        Возвращает DataFrame с одной строкой фичей
+        Применяет веса: H2H = 0.7, Home/Away = 0.3 для голов и ударов
+        Возвращает DataFrame с одной строкой взвешенных фичей
         """
         if self.df_matches is None:
             logger.error("Данные не загружены")
@@ -56,13 +57,26 @@ class AnalystAgent:
         features.update(away_features)
         features.update(h2h_features)
 
-        logger.info(f"Построено фичей: {len(features)}")
+        # Применяем веса только к голам и ударам
+        weighted_stats = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']
+        weighted_features = {}
+        for col, val in features.items():
+            if any(col.endswith(f"{stat}_avg") for stat in weighted_stats):
+                if col.startswith("H2H_"):
+                    weighted_features[col] = val * 0.7
+                elif col.startswith("Home_") or col.startswith("Away_"):
+                    weighted_features[col] = val * 0.3
+            else:
+                weighted_features[col] = val  # оставляем без изменений
 
-        return pd.DataFrame([features])
+        logger.info(f"Построено взвешенных фичей: {len(weighted_features)}")
+
+        return pd.DataFrame([weighted_features])
 
     def _get_team_features(self, team: str, last_n: int, prefix: str) -> Dict:
         """Вычисляет средние показатели команды за последние N матчей"""
         # Находим последние N матчей команды (дома и в гостях)
+        print(team)
         last_matches = self.df_matches[
             (self.df_matches['HomeTeam'] == team) | (self.df_matches['AwayTeam'] == team)
             ].sort_values(by='Date', ascending=False).head(last_n)
