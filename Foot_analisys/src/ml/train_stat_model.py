@@ -20,6 +20,8 @@ def train_all_models(dataset_path: str, models_dir: str):
         if col.startswith(("Home_", "Away_", "H2H_")) and col.endswith("_avg")
     ]
 
+    feature_cols += ["Home_Elo", "Away_Elo", "Diff_Elo"]
+
     # Все таргеты
     target_cols = [
         "Target_FTHG", "Target_FTAG",
@@ -30,6 +32,8 @@ def train_all_models(dataset_path: str, models_dir: str):
         "Target_HY", "Target_AY",
         "Target_HR", "Target_AR"
     ]
+
+
 
     # Удаляем строки, где нет данных
     df = df.dropna(subset=feature_cols + target_cols).reset_index(drop=True)

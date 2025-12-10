@@ -31,16 +31,44 @@ class AnalystAgent:
             return False
 
     def build_features_for_match(self, home_team: str, away_team: str, last_n: int = 10) -> pd.DataFrame:
-        """
-        Строит фичи для матча на основе последних N матчей каждой команды и H2H
-        Применяет веса: H2H = 0.7, Home/Away = 0.3 для голов и ударов
-        Возвращает DataFrame с одной строкой взвешенных фичей
-        """
         if self.df_matches is None:
             logger.error("Данные не загружены")
             return pd.DataFrame()
 
         logger.info(f"Строю фичи для {home_team} vs {away_team}")
+
+        # берём все прошедшие матчи (на всякий случай)
+        df_hist = self.df_matches.sort_values('Date')
+
+        # Elo: берём последний матч каждой команды и её рейтинг там
+        home_last = df_hist[
+            (df_hist['HomeTeam'] == home_team) | (df_hist['AwayTeam'] == home_team)
+            ].sort_values('Date', ascending=False).head(1)
+
+        away_last = df_hist[
+            (df_hist['HomeTeam'] == away_team) | (df_hist['AwayTeam'] == away_team)
+            ].sort_values('Date', ascending=False).head(1)
+
+        if home_last.empty or away_last.empty:
+            logger.warning("Не найден последний матч для одной из команд, Elo ставим базовый")
+            home_elo = 1500.0
+            away_elo = 1500.0
+        else:
+            # В all_matches у тебя Elo уже считается как рейтинг команды в конкретном матче
+            # Если команда была дома, берём Home_Elo, если в гостях — Away_Elo
+            last_home_row = home_last.iloc[0]
+            if last_home_row['HomeTeam'] == home_team:
+                home_elo = last_home_row.get('Home_Elo', 1500.0)
+            else:
+                home_elo = last_home_row.get('Away_Elo', 1500.0)
+
+            last_away_row = away_last.iloc[0]
+            if last_away_row['HomeTeam'] == away_team:
+                away_elo = last_away_row.get('Home_Elo', 1500.0)
+            else:
+                away_elo = last_away_row.get('Away_Elo', 1500.0)
+
+        diff_elo = home_elo - away_elo
 
         # Фичи для домашней команды
         home_features = self._get_team_features(home_team, last_n, prefix='Home')
@@ -53,25 +81,31 @@ class AnalystAgent:
 
         # Объединяем все фичи
         features = {}
+
+        # добавляем Elo
+        features['Home_Elo'] = float(home_elo)
+        features['Away_Elo'] = float(away_elo)
+        features['Diff_Elo'] = float(diff_elo)
+
         features.update(home_features)
         features.update(away_features)
         features.update(h2h_features)
 
-        # Применяем веса только к голам и ударам
+        """# Применяем веса только к голам и ударам (как было)
         weighted_stats = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']
         weighted_features = {}
         for col, val in features.items():
             if any(col.endswith(f"{stat}_avg") for stat in weighted_stats):
                 if col.startswith("H2H_"):
-                    weighted_features[col] = val * 0.7
+                    weighted_features[col] = val * 1
                 elif col.startswith("Home_") or col.startswith("Away_"):
-                    weighted_features[col] = val * 0.3
+                    weighted_features[col] = val * 1
             else:
-                weighted_features[col] = val  # оставляем без изменений
+                weighted_features[col] = val"""
 
-        logger.info(f"Построено взвешенных фичей: {len(weighted_features)}")
+        logger.info(f"Построено взвешенных фичей: {len(features)}")
 
-        return pd.DataFrame([weighted_features])
+        return pd.DataFrame([features])
 
     def _get_team_features(self, team: str, last_n: int, prefix: str) -> Dict:
         """Вычисляет средние показатели команды за последние N матчей"""
