@@ -1,0 +1,211 @@
+.
+├── Foot_analisys
+│   ├── Readme.md
+│   ├── __init__.py
+│   ├── data
+│   │   ├── Readme.md
+│   │   ├── processed
+│   │   │   ├── Bundes Ligue
+│   │   │   │   ├── D1-10.csv
+│   │   │   │   ├── D1-11.csv
+│   │   │   │   ├── D1-2.csv
+│   │   │   │   ├── D1-3.csv
+│   │   │   │   ├── D1-4.csv
+│   │   │   │   ├── D1-5.csv
+│   │   │   │   ├── D1-6.csv
+│   │   │   │   ├── D1-7.csv
+│   │   │   │   ├── D1-8.csv
+│   │   │   │   ├── D1-9.csv
+│   │   │   │   └── D1.csv
+│   │   │   ├── EPL
+│   │   │   │   ├── E0-10.csv
+│   │   │   │   ├── E0-11.csv
+│   │   │   │   ├── E0-2.csv
+│   │   │   │   ├── E0-3.csv
+│   │   │   │   ├── E0-4.csv
+│   │   │   │   ├── E0-5.csv
+│   │   │   │   ├── E0-6.csv
+│   │   │   │   ├── E0-7.csv
+│   │   │   │   ├── E0-8.csv
+│   │   │   │   ├── E0-9.csv
+│   │   │   │   └── E0.csv
+│   │   │   ├── LL
+│   │   │   │   ├── SP1-10.csv
+│   │   │   │   ├── SP1-11.csv
+│   │   │   │   ├── SP1-2.csv
+│   │   │   │   ├── SP1-3.csv
+│   │   │   │   ├── SP1-4.csv
+│   │   │   │   ├── SP1-5.csv
+│   │   │   │   ├── SP1-6.csv
+│   │   │   │   ├── SP1-7.csv
+│   │   │   │   ├── SP1-8.csv
+│   │   │   │   ├── SP1-9.csv
+│   │   │   │   └── SP1.csv
+│   │   │   ├── Ligue1
+│   │   │   │   ├── F1-10.csv
+│   │   │   │   ├── F1-11.csv
+│   │   │   │   ├── F1-2.csv
+│   │   │   │   ├── F1-3.csv
+│   │   │   │   ├── F1-4.csv
+│   │   │   │   ├── F1-5.csv
+│   │   │   │   ├── F1-6.csv
+│   │   │   │   ├── F1-7.csv
+│   │   │   │   ├── F1-8.csv
+│   │   │   │   ├── F1-9.csv
+│   │   │   │   └── F1.csv
+│   │   │   ├── Serie A
+│   │   │   │   ├── I1-10.csv
+│   │   │   │   ├── I1-11.csv
+│   │   │   │   ├── I1-2.csv
+│   │   │   │   ├── I1-3.csv
+│   │   │   │   ├── I1-4.csv
+│   │   │   │   ├── I1-5.csv
+│   │   │   │   ├── I1-6.csv
+│   │   │   │   ├── I1-7.csv
+│   │   │   │   ├── I1-8.csv
+│   │   │   │   ├── I1-9.csv
+│   │   │   │   └── I1.csv
+│   │   │   ├── all_matches.csv
+│   │   │   ├── info.ipynb
+│   │   │   └── train_full_stats_dataset.csv
+│   │   └── raw
+│   │       ├── Bundes Ligue
+│   │       │   ├── D1-10.csv
+│   │       │   ├── D1-11.csv
+│   │       │   ├── D1-2.csv
+│   │       │   ├── D1-3.csv
+│   │       │   ├── D1-4.csv
+│   │       │   ├── D1-5.csv
+│   │       │   ├── D1-6.csv
+│   │       │   ├── D1-7.csv
+│   │       │   ├── D1-8.csv
+│   │       │   ├── D1-9.csv
+│   │       │   └── D1.csv
+│   │       ├── EPL
+│   │       │   ├── E0-10.csv
+│   │       │   ├── E0-11.csv
+│   │       │   ├── E0-2.csv
+│   │       │   ├── E0-3.csv
+│   │       │   ├── E0-4.csv
+│   │       │   ├── E0-5.csv
+│   │       │   ├── E0-6.csv
+│   │       │   ├── E0-7.csv
+│   │       │   ├── E0-8.csv
+│   │       │   ├── E0-9.csv
+│   │       │   └── E0.csv
+│   │       ├── LL
+│   │       │   ├── SP1-10.csv
+│   │       │   ├── SP1-11.csv
+│   │       │   ├── SP1-2.csv
+│   │       │   ├── SP1-3.csv
+│   │       │   ├── SP1-4.csv
+│   │       │   ├── SP1-5.csv
+│   │       │   ├── SP1-6.csv
+│   │       │   ├── SP1-7.csv
+│   │       │   ├── SP1-8.csv
+│   │       │   ├── SP1-9.csv
+│   │       │   └── SP1.csv
+│   │       ├── Ligue1
+│   │       │   ├── F1-10.csv
+│   │       │   ├── F1-11.csv
+│   │       │   ├── F1-2.csv
+│   │       │   ├── F1-3.csv
+│   │       │   ├── F1-4.csv
+│   │       │   ├── F1-5.csv
+│   │       │   ├── F1-6.csv
+│   │       │   ├── F1-7.csv
+│   │       │   ├── F1-8.csv
+│   │       │   ├── F1-9.csv
+│   │       │   └── F1.csv
+│   │       └── Serie A
+│   │           ├── I1-10.csv
+│   │           ├── I1-11.csv
+│   │           ├── I1-2.csv
+│   │           ├── I1-3.csv
+│   │           ├── I1-4.csv
+│   │           ├── I1-5.csv
+│   │           ├── I1-6.csv
+│   │           ├── I1-7.csv
+│   │           ├── I1-8.csv
+│   │           ├── I1-9.csv
+│   │           └── I1.csv
+│   ├── logs
+│   │   ├── app.log
+│   │   └── bot.log
+│   ├── models
+│   │   ├── Target_AC.pkl
+│   │   ├── Target_AF.pkl
+│   │   ├── Target_AR.pkl
+│   │   ├── Target_AS.pkl
+│   │   ├── Target_AST.pkl
+│   │   ├── Target_AY.pkl
+│   │   ├── Target_FTAG.pkl
+│   │   ├── Target_FTHG.pkl
+│   │   ├── Target_HC.pkl
+│   │   ├── Target_HF.pkl
+│   │   ├── Target_HR.pkl
+│   │   ├── Target_HS.pkl
+│   │   ├── Target_HST.pkl
+│   │   └── Target_HY.pkl
+│   ├── notebooks
+│   │   └── XgBoost.ipynb
+│   ├── requirments.txt
+│   ├── setup.py
+│   ├── src
+│   │   ├── __init__.py
+│   │   ├── agents
+│   │   │   ├── __init__.py
+│   │   │   ├── analyst.py
+│   │   │   ├── predictor.py
+│   │   │   ├── reporter.py
+│   │   │   └── team_statistics.py
+│   │   ├── bot
+│   │   │   ├── __init__.py
+│   │   │   ├── handlers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── about_handlers.py
+│   │   │   │   ├── base_handlers.py
+│   │   │   │   ├── favorites_handlers.py
+│   │   │   │   ├── main_handler.py
+│   │   │   │   ├── menu_handlers.py
+│   │   │   │   ├── prediction_handlers.py
+│   │   │   │   ├── schedule_handlers.py
+│   │   │   │   ├── settings_handlers.py
+│   │   │   │   ├── stats_handlers.py
+│   │   │   │   └── user_handlers.py
+│   │   │   ├── main.py
+│   │   │   ├── messages.py
+│   │   │   ├── readme.md
+│   │   │   ├── services
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── llm_analysis_service.py
+│   │   │   │   ├── notification_service.py
+│   │   │   │   ├── prediction_formatter.py
+│   │   │   │   ├── schedule_service.py
+│   │   │   │   ├── team_mapper.py
+│   │   │   │   └── team_stats_service.py
+│   │   │   └── utils
+│   │   │       ├── __init__.py
+│   │   │       └── user_data.py
+│   │   ├── coordinator
+│   │   │   ├── __init__.py
+│   │   │   └── coordinator.py
+│   │   ├── ml
+│   │   │   ├── __init__.py
+│   │   │   ├── predict.py
+│   │   │   ├── train_model.py
+│   │   │   └── train_stat_model.py
+│   │   └── utils
+│   │       ├── __init__.py
+│   │       ├── data_loader.py
+│   │       └── preprocessing.py
+│   └── tests
+│       ├── __init__.py
+│       ├── test_agents.py
+│       ├── test_bot.py
+│       ├── test_coordinator.py
+│       └── test_ml.py
+├── README.md
+└── architecture.txt
+
+28 directories, 181 files

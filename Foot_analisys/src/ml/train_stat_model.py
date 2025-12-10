@@ -1,97 +1,99 @@
 # src/ml/train_models.py
 import os
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
+from catboost import CatBoostRegressor
 from sklearn.metrics import mean_absolute_error
-from xgboost import XGBRegressor
-import joblib
 
-def train_all_models(dataset_path: str, models_dir: str, n_estimators: int = 200):
+
+def train_all_models(dataset_path: str, models_dir: str):
     os.makedirs(models_dir, exist_ok=True)
 
-    # -----------------------------
     # Загружаем датасет
-    # -----------------------------
     df = pd.read_csv(dataset_path, parse_dates=['Date'], dayfirst=True)
 
-    # Признаки и таргеты
-    feature_cols = [col for col in df.columns if col.startswith(('Home_', 'Away_', 'H2H_'))]
-    target_cols = [
-        "Target_FTHG", "Target_FTAG",
-        "Target_HS", "Target_AS", "Target_HST", "Target_AST",
-        "Target_HF", "Target_AF", "Target_HC", "Target_AC",
-        "Target_HY", "Target_AY", "Target_HR", "Target_AR"
+    # Сортировка по времени — важно!
+    df = df.sort_values("Date").reset_index(drop=True)
+
+    # Все признаки: Home_*_avg, Away_*_avg, H2H_*_avg
+    feature_cols = [
+        col for col in df.columns
+        if col.startswith(("Home_", "Away_", "H2H_")) and col.endswith("_avg")
     ]
 
-    # Убираем NaN
+    # Все таргеты
+    target_cols = [
+        "Target_FTHG", "Target_FTAG",
+        "Target_HS", "Target_AS",
+        "Target_HST", "Target_AST",
+        "Target_HF", "Target_AF",
+        "Target_HC", "Target_AC",
+        "Target_HY", "Target_AY",
+        "Target_HR", "Target_AR"
+    ]
+
+    # Удаляем строки, где нет данных
     df = df.dropna(subset=feature_cols + target_cols).reset_index(drop=True)
 
-    X = df[feature_cols]
-    y = df[target_cols]
+    print(f"Матчей после очистки: {len(df)}")
+    print(f"Количество фичей: {len(feature_cols)}")
 
-    print("Признаки:", X.shape)
-    print("Таргеты:", y.shape)
-    print(f"После очистки осталось {len(df)} матчей")
+    # Веса применяем только к голам и ударам
+    weighted_stats = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']
+    for col in feature_cols:
+        for stat in weighted_stats:
+            if col.endswith(f"{stat}_avg"):
+                if col.startswith("H2H_"):
+                    df[col] = df[col] * 0.7
+                elif col.startswith("Home_") or col.startswith("Away_"):
+                    df[col] = df[col] * 0.3
+                break  # нашли, больше не проверяем
 
-    results = {}  # Для анализа ошибок
+    # TIME-BASED TRAIN/TEST SPLIT
+    train_size = int(len(df) * 0.8)
+    train = df.iloc[:train_size]
+    test = df.iloc[train_size:]
+
+    results = {}
 
     for target in target_cols:
-        print(f"Обучаем модель для: {target}")
+        print(f"\n=== Обучаем модель для {target} ===")
 
-        # Разделение на train/test
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y[target], test_size=0.2, random_state=42
+        X_train = train[feature_cols]
+        y_train = train[target]
+
+        X_test = test[feature_cols]
+        y_test = test[target]
+
+        # CatBoost — лучшая модель для футбольных данных
+        model = CatBoostRegressor(
+            iterations=600,
+            depth=8,
+            learning_rate=0.05,
+            loss_function="MAE",
+            verbose=False,
+            random_seed=42
         )
 
-        # XGBoost модель
-        model = XGBRegressor(
-            n_estimators=n_estimators,
-            max_depth=10,
-            learning_rate=0.1,
-            random_state=42
-        )
         model.fit(X_train, y_train)
 
-        # Предсказание
         y_pred = model.predict(X_test)
-
-        # MAE
         mae = mean_absolute_error(y_test, y_pred)
-        print(f"MAE для {target}: {mae:.2f}")
+
+        print(f"MAE: {mae:.4f}")
 
         # Сохраняем модель
-        model_path = os.path.join(models_dir, f"{target}.pkl")
-        joblib.dump(model, model_path)
+        model_path = os.path.join(models_dir, f"{target}.cbm")
+        model.save_model(model_path)
 
-        # Для анализа
         results[target] = (y_test, y_pred)
 
-    # -----------------------------
-    # Таблица для первых 5 матчей
-    # -----------------------------
-    comparison_rows = 5
-    comparison_data = []
-    for target, (y_test, y_pred) in results.items():
-        comp_df = pd.DataFrame({
-            'Target': [target]*comparison_rows,
-            'Actual': y_test.iloc[:comparison_rows].values,
-            'Predicted': y_pred[:comparison_rows]
-        })
-        comparison_data.append(comp_df)
+    print("\nОбучение всех моделей завершено.")
+    return results
 
-    comparison_df = pd.concat(comparison_data, ignore_index=True)
-    print("\nПример сравнения реальных и предсказанных значений (5 матчей на таргет):")
-    print(comparison_df)
 
-    return comparison_df
-
-# -----------------------------
-# Точка входа
-# -----------------------------
 if __name__ == "__main__":
     BASE_DIR = os.path.abspath(os.path.join(os.getcwd(), "../.."))
     dataset_path = os.path.join(BASE_DIR, "data/processed/train_full_stats_dataset.csv")
-    models_dir = os.path.join(BASE_DIR, "models")
+    models_dir = os.path.join(BASE_DIR, "models_catboost")
 
     train_all_models(dataset_path, models_dir)

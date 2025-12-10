@@ -29,7 +29,7 @@ class PredictorAgent:
         logger.info("Делаю предикт через MatchPredictor")
 
         try:
-            # Вызываем ТВОЙ predict_match
+            # Вызываем  predict_match
             raw_predictions = self.predictor.predict_match(features)
 
             logger.info(f"✓ Предикт готов, получено значений: {len(raw_predictions)}")
