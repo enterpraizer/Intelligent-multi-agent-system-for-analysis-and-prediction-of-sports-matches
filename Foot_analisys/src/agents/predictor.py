@@ -30,7 +30,7 @@ class PredictorAgent:
         try:
             raw_predictions = self.predictor.predict_match(features)
 
-            logger.info(f"✓ Предикт готов, получено значений: {len(raw_predictions)}")
+            logger.info(f"Предикт готов, получено значений: {len(raw_predictions)}")
 
             return {
                 'success': True,

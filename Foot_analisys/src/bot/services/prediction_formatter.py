@@ -102,107 +102,30 @@ def format_detailed_prediction(result: dict) -> str:
     home_shot_acc = home_shots_target / max(home_shots, 1.0) * 100.0
     away_shot_acc = away_shots_target / max(away_shots, 1.0) * 100.0
 
-    # Ключевые моменты
-    moments = []
-    total_goals = home_goals_raw + away_goals_raw
-    total_shots = home_shots + away_shots
-    total_fouls = home_fouls + away_fouls
-    total_yellows = home_yellows + away_yellows
-    total_corners = home_corners + away_corners
-
-    if total_goals > 3:
-        moments.append(f"• Ожидается результативный матч (≈ {total_goals:.1f} гола).")
-    elif total_goals < 2:
-        moments.append("• Ожидается низкая результативность и осторожная игра.")
-
-    if total_shots > 20:
-        moments.append(f"• Обе команды создадут много моментов (≈ {total_shots:.0f} ударов).")
-
-    if home_shot_acc > 50:
-        moments.append(f"• {home_team} будет точен в ударах (≈ {home_shot_acc:.0f}% в створ).")
-    if away_shot_acc > 50:
-        moments.append(f"• {away_team} будет точен в ударах (≈ {away_shot_acc:.0f}% в створ).")
-
-    if total_fouls > 22:
-        moments.append(f"• Напряжённый матч с большим количеством фолов (≈ {total_fouls:.0f}).")
-
-    if total_yellows > 4:
-        moments.append(f"• Ожидается много жёлтых карточек (≈ {total_yellows:.0f}).")
-
-    if home_reds + away_reds >= 0.5:
-        moments.append("• Есть риск удаления игрока.")
-
-    if total_corners > 10:
-        moments.append(f"• Предполагается много угловых (≈ {total_corners:.0f}).")
-
-    key_moments_text = "\n".join(moments) if moments else "• Существенных аномалий по статистике не ожидается."
-
-    # Краткий анализ
-    expert_parts = []
-    if goal_diff_int > 1:
-        expert_parts.append(
-            f"{home_team} выглядят явным фаворитом и имеют хорошие шансы на уверенную победу ({score})."
-        )
-    elif goal_diff_int < -1:
-        expert_parts.append(
-            f"{away_team} выглядят сильнее и способны выиграть матч ({score})."
-        )
-    elif goal_diff_int == 0:
-        expert_parts.append(
-            "Ожидается равный матч: прогнозируется ничья и плотный счёт."
-        )
-    else:
-        expert_parts.append(
-            "Команды близки по уровню, ожидается упорная борьба с минимальной разницей в счёте."
-        )
-
-    if total_goals > 3:
-        expert_parts.append("Игра, вероятно, будет открытой и результативной.")
-    elif total_goals < 2:
-        expert_parts.append("Возможна закрытая тактическая игра с небольшим числом голов.")
-
-    if total_shots > 20:
-        expert_parts.append("Количество ударов говорит о высокой интенсивности в атаке.")
-
-    expert_text = " ".join(expert_parts)
-
     report = f"""
-        ⚽️ <b>ПРОГНОЗ МАТЧА</b>
-        
-        🏠 {home_team} vs ✈️ {away_team}
-        
-        ━━━━━━━━━━━━━━━━━━━━━━━━
-        🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
-        
-        Счёт: {score}
-        Результат: {result_text}
-        
-        Вероятности:
-          🏠 Победа хозяев: {home_prob:.0f}%
-          🤝 Ничья: {draw_prob:.0f}%
-          ✈️ Победа гостей: {away_prob:.0f}%
-        
-        ━━━━━━━━━━━━━━━━━━━━━━━━
-        📊 <b>СТАТИСТИКА (ожидания модели)</b>
-        
-        ⚽️ Голы (сырые): {home_goals_raw:.3f} — {away_goals_raw:.3f}
-        🎯 Удары: {home_shots:.3f} — {away_shots:.3f}
-        🔵 В створ: {home_shots_target:.3f} — {away_shots_target:.3f}
-        🎯 Точность ударов: {home_shot_acc:.1f}% — {away_shot_acc:.1f}%
-        🚩 Угловые: {home_corners:.3f} — {away_corners:.3f}
-        ⚠️ Фолы: {home_fouls:.3f} — {away_fouls:.3f}
-        🟨 Жёлтые: {home_yellows:.3f} — {away_yellows:.3f}
-        🟥 Красные: {home_reds:.3f} — {away_reds:.3f}
-        
-        ━━━━━━━━━━━━━━━━━━━━━━━━
-        ⚡️ <b>КЛЮЧЕВЫЕ МОМЕНТЫ</b>
-        
-        {key_moments_text}
-        
-        ━━━━━━━━━━━━━━━━━━━━━━━━
-        💡 <b>КРАТКИЙ АНАЛИЗ</b>
+⚡ <b>Детальный прогноз</b>
 
-        {expert_text}
-        """
+🏠 {home_team} vs ✈️ {away_team}
+
+<b>Прогноз счета:</b> {score}
+<b>Вероятности:</b>
+  🏠 Победа хозяев: {home_prob:.0f}%
+  🤝 Ничья: {draw_prob:.0f}%  
+  ✈️ Победа гостей: {away_prob:.0f}%
+
+📊 <b>Статистика: </b>
+        
+  ⚽️ Голы (сырые): {home_goals_raw:.3f} — {away_goals_raw:.3f}
+  🎯 Удары: {home_shots:.3f} — {away_shots:.3f}
+  🔵 В створ: {home_shots_target:.3f} — {away_shots_target:.3f}
+  🎯 Точность ударов: {home_shot_acc:.1f}% — {away_shot_acc:.1f}%
+  🚩 Угловые: {home_corners:.3f} — {away_corners:.3f}
+  ⚠️ Фолы: {home_fouls:.3f} — {away_fouls:.3f}
+  🟨 Жёлтые: {home_yellows:.3f} — {away_yellows:.3f}
+  🟥 Красные: {home_reds:.3f} — {away_reds:.3f}
+  
+💡 <i>Матч выбран из актуального расписания</i>
+"""
+
 
     return report
