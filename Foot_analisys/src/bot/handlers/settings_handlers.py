@@ -1,4 +1,3 @@
-# handlers/settings_handlers.py - новый файл
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 from Foot_analisys.src.bot.utils.user_data import get_user_data
@@ -11,7 +10,7 @@ async def show_notifications_settings(update: Update, context: ContextTypes.DEFA
     notifications = user_data['notifications']
 
     status_icon = "✅" if notifications['enabled'] else "❌"
-    time_options = [1, 3, 6, 12, 24]  # часы до матча
+    time_options = [1, 3, 6, 12, 24]
 
     keyboard = [
         [InlineKeyboardButton(
@@ -20,7 +19,6 @@ async def show_notifications_settings(update: Update, context: ContextTypes.DEFA
         )],
     ]
 
-    # Кнопки времени уведомлений
     time_row = []
     for hours in time_options:
         is_active = "🟢" if notifications['time_before_match'] == hours else "⚪"

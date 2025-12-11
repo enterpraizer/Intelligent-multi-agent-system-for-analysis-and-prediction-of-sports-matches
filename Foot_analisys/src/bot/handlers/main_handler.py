@@ -146,11 +146,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith('stats_league_') and '_page_' in data:
         await handle_league_page(update, context)
 
-    # Обработка сохранения пользовательского прогноза
     elif data.startswith('save_quick_') or data.startswith('save_detailed_'):
         await save_user_prediction_handler(update, context)
 
-    # Обработка нереализованных функций
     elif data in ["stats_player", "stats_h2h",
                   "settings_favorites", "settings_notifications",
                   "schedule_search", "menu_about", "stats_all"]:

@@ -24,12 +24,10 @@ class PredictorAgent:
     def predict(self, features: pd.DataFrame) -> Dict:
         """
         Получает фичи от Analyst и делает предикт через MatchPredictor
-        Возвращает все предсказания моделей
         """
         logger.info("Делаю предикт через MatchPredictor")
 
         try:
-            # Вызываем  predict_match
             raw_predictions = self.predictor.predict_match(features)
 
             logger.info(f"✓ Предикт готов, получено значений: {len(raw_predictions)}")

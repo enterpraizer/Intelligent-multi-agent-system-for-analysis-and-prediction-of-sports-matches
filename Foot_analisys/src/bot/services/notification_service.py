@@ -27,7 +27,6 @@ class NotificationService:
     async def check_upcoming_matches(self):
         """Проверка предстоящих матчей для уведомлений"""
         try:
-            # Получаем все матчи на ближайшие 2 дня
             all_matches = schedule_service.get_all_upcoming_matches(limit_per_league=20)
 
             for user_id, user_data in user_data_store.items():
@@ -48,10 +47,8 @@ class NotificationService:
             match_time = datetime.fromisoformat(match["utcDate"].replace("Z", "+00:00"))
             time_until_match = match_time - datetime.now()
 
-            # Проверяем, подходит ли время для уведомления
             if timedelta(hours=notification_time - 1) < time_until_match <= timedelta(hours=notification_time):
 
-                # Проверяем, участвует ли избранная команда
                 home_team_id = match["homeTeam"].get("id")
                 away_team_id = match["awayTeam"].get("id")
 
@@ -66,7 +63,6 @@ class NotificationService:
             match_time = datetime.fromisoformat(match["utcDate"].replace("Z", "+00:00"))
             league = match.get('league_name', 'Неизвестная лига')
 
-            # Форматируем время
             match_time_str = match_time.strftime("%d.%m.%Y в %H:%M")
 
             message = (
@@ -95,5 +91,4 @@ class NotificationService:
         self.is_running = False
 
 
-# Глобальный экземпляр
 notification_service = None

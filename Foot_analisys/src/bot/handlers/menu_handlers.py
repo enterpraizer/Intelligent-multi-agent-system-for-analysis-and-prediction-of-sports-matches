@@ -107,5 +107,4 @@ async def show_prediction_menu(update: Update, context: ContextTypes.DEFAULT_TYP
 
 def register_menu_handlers(app):
     """Регистрирует обработчики меню"""
-    # Обработчики меню регистрируются через CallbackQueryHandler в главном файле
     pass

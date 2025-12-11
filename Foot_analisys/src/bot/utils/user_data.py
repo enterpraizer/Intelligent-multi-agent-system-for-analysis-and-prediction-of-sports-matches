@@ -1,12 +1,8 @@
-"""
-Утилиты для работы с пользовательскими данными
-"""
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Хранилище пользовательских данных (временное, лучше использовать базу данных)
 user_data_store = {}
 
 
@@ -46,12 +42,10 @@ def add_favorite_team(user_id, team_id, team_name):
     """Добавление команды в избранное"""
     user_data = get_user_data(user_id)
 
-    # Проверяем, не добавлена ли уже команда
     for fav_team in user_data['favorite_teams']:
         if fav_team['id'] == team_id:
-            return False  # Команда уже в избранном
+            return False
 
-    # Добавляем команду
     user_data['favorite_teams'].append({
         'id': team_id,
         'name': team_name,
@@ -65,13 +59,12 @@ def remove_favorite_team(user_id, team_id):
     """Удаление команды из избранного"""
     user_data = get_user_data(user_id)
 
-    # Ищем команду для удаления
     for i, fav_team in enumerate(user_data['favorite_teams']):
         if fav_team['id'] == team_id:
             user_data['favorite_teams'].pop(i)
             return True
 
-    return False  # Команда не найдена в избранном
+    return False
 
 
 def get_favorite_teams(user_id):
@@ -81,7 +74,7 @@ def get_favorite_teams(user_id):
 
 
 def is_team_favorite(user_id, team_id):
-    """Проверка, является ли команда избранной"""
+    """Проверка является ли команда избранной"""
     user_data = get_user_data(user_id)
     return any(fav_team['id'] == team_id for fav_team in user_data['favorite_teams'])
 
@@ -113,7 +106,6 @@ def add_scheduled_match(user_id, match_data):
     """Добавление матча для уведомлений"""
     user_data = get_user_data(user_id)
 
-    # Проверяем, не добавлен ли уже матч
     for match in user_data['scheduled_matches']:
         if (match['match_id'] == match_data.get('match_id') and
                 match['home_team'] == match_data.get('home_team') and
@@ -140,7 +132,7 @@ def get_scheduled_matches(user_id):
 
 
 def mark_notification_sent(user_id, match_id):
-    """Отметка, что уведомление отправлено"""
+    """уведомление отправлено"""
     user_data = get_user_data(user_id)
 
     for match in user_data['scheduled_matches']:
@@ -157,7 +149,6 @@ def cleanup_old_matches(user_id):
     user_data = get_user_data(user_id)
     current_time = datetime.now()
 
-    # Удаляем матчи, которые прошли более 2 дней назад
     user_data['scheduled_matches'] = [
         match for match in user_data['scheduled_matches']
         if match.get('match_time') and

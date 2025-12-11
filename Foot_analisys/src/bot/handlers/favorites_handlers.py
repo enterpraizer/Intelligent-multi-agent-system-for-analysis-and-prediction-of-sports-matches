@@ -1,6 +1,3 @@
-"""
-Обработчики избранных команд
-"""
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from Foot_analisys.src.bot.utils.user_data import (
@@ -47,7 +44,6 @@ async def show_favorites_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         keyboard.append(row)
 
-    # Кнопки управления
     keyboard.extend([
         [InlineKeyboardButton("🗑️ Удалить избранные", callback_data="favorites_clear")],
         [InlineKeyboardButton("➕ Добавить ещё", callback_data="stats_team")],
@@ -81,7 +77,6 @@ async def clear_favorites(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Очищаем список избранных
     context.user_data['favorite_teams'] = []
 
     keyboard = [
@@ -103,7 +98,7 @@ async def toggle_favorite_team(update: Update, context: ContextTypes.DEFAULT_TYP
     query = update.callback_query
     user_id = query.from_user.id
 
-    # Получаем team_id из callback_data (формат: favorite_toggle_{team_id})
+    # Получаем team_id из callback_data
     team_id = int(query.data.split('_')[2])
 
     # Получаем информацию о команде
@@ -112,32 +107,25 @@ async def toggle_favorite_team(update: Update, context: ContextTypes.DEFAULT_TYP
 
     # Проверяем, есть ли команда уже в избранном
     if is_team_favorite(user_id, team_id):
-        # Удаляем из избранного
         remove_favorite_team(user_id, team_id)
         action_text = "❌ Удалена из избранного"
         new_button_text = "⭐ Добавить в избранное"
     else:
-        # Добавляем в избранное
         add_favorite_team(user_id, team_id, team_name)
         action_text = "✅ Добавлена в избранное"
         new_button_text = "❌ Удалить из избранного"
 
-    # Обновляем сообщение
     await query.answer(f"{team_name} {action_text}")
 
-    # Обновляем кнопку в сообщении со статистикой
     try:
-        # Получаем текущее сообщение
         message_text = query.message.text
         message_markup = query.message.reply_markup
 
-        # Создаем новую клавиатуру с обновленной кнопкой
         new_keyboard = []
         for row in message_markup.inline_keyboard:
             new_row = []
             for button in row:
                 if button.callback_data == query.data:
-                    # Заменяем кнопку избранного
                     new_row.append(InlineKeyboardButton(
                         new_button_text,
                         callback_data=f"favorite_toggle_{team_id}"
@@ -148,7 +136,6 @@ async def toggle_favorite_team(update: Update, context: ContextTypes.DEFAULT_TYP
 
         new_reply_markup = InlineKeyboardMarkup(new_keyboard)
 
-        # Обновляем сообщение
         await query.edit_message_reply_markup(new_reply_markup)
 
     except Exception as e:
@@ -157,5 +144,4 @@ async def toggle_favorite_team(update: Update, context: ContextTypes.DEFAULT_TYP
 
 def register_favorites_handlers(app):
     """Регистрирует обработчики избранных команд"""
-    # Обработчики регистрируются через CallbackQueryHandler в главном файле
     pass

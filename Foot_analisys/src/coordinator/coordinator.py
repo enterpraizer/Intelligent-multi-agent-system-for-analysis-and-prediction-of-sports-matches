@@ -67,7 +67,6 @@ class MatchCoordinator:
         logger.info(f"Прогноз матча: {home_team} vs {away_team}")
         logger.info(f"{'='*70}")
 
-        # ШАГ 1: Analyst строит фичи
         logger.info("Шаг 1/3: Analyst строит фичи из исторических данных...")
 
         analysis_result = self.analyst.analyze_match(home_team, away_team)
@@ -81,9 +80,8 @@ class MatchCoordinator:
         features_df = analysis_result['features']
         features_dict = analysis_result['features_dict']
 
-        logger.info(f"✓ Analyst построил {len(features_dict)} фичей")
+        logger.info(f"Analyst построил {len(features_dict)} фичей")
 
-        # ШАГ 2: Predictor делает предикт
         logger.info("Шаг 2/3: Predictor делает предсказания...")
 
         prediction_result = self.predictor.predict(features_df)
@@ -96,9 +94,8 @@ class MatchCoordinator:
 
         predictions = prediction_result['predictions']
 
-        logger.info(f"✓ Predictor вернул {len(predictions)} предсказаний")
+        logger.info(f"Predictor вернул {len(predictions)} предсказаний")
 
-        # ШАГ 3: Reporter генерирует отчет
         logger.info("Шаг 3/3: Reporter генерирует текстовый отчет...")
 
         report = self.reporter.generate_report(
@@ -134,7 +131,6 @@ class MatchCoordinator:
         away_goals = round(p.get('Target_FTAG', 1.2), 1)
         score = f"{int(round(home_goals))}:{int(round(away_goals))}"
 
-        # Вероятности
         goal_diff = home_goals - away_goals
         if goal_diff > 0.5:
             home_prob = min(85, 50 + goal_diff * 15)
@@ -149,16 +145,16 @@ class MatchCoordinator:
         draw_prob = 100 - home_prob - away_prob
 
         return f"""
-🎯 БЫСТРЫЙ ПРОГНОЗ: {home_team} vs {away_team}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Прогноз счета: {score}
-
-Вероятности:
-  🏠 Победа хозяев: {home_prob:.1f}%
-  🤝 Ничья: {draw_prob:.1f}%
-  ✈️  Победа гостей: {away_prob:.1f}%
-"""
+        🎯 БЫСТРЫЙ ПРОГНОЗ: {home_team} vs {away_team}
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        Прогноз счета: {score}
+        
+        Вероятности:
+          🏠 Победа хозяев: {home_prob:.1f}%
+          🤝 Ничья: {draw_prob:.1f}%
+          ✈️  Победа гостей: {away_prob:.1f}%
+        """
 
     def get_team_list(self, league_idx: int = -1) -> list:
         """Получение списка всех команд из данных"""
@@ -201,7 +197,6 @@ class MatchCoordinator:
         if not self.initialized:
             self.initialize()
 
-        # Строим фичи для каждой команды как если бы они играли друг с другом
         result1 = self.analyst.analyze_match(team1, team2)
         result2 = self.analyst.analyze_match(team2, team1)
 
@@ -212,20 +207,20 @@ class MatchCoordinator:
         f2 = result2['features_dict']
 
         return f"""
-📊 СРАВНЕНИЕ КОМАНД
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-{team1} vs {team2}
-
-Показатель                    {team1:<15} {team2:<15}
-{'─' * 60}
-Средние голы (5 матчей)       {f1.get('Home_GoalsScored_Last5', 0):<15.2f} {f2.get('Home_GoalsScored_Last5', 0):<15.2f}
-Пропускает голов              {f1.get('Home_GoalsConceded_Last5', 0):<15.2f} {f2.get('Home_GoalsConceded_Last5', 0):<15.2f}
-Процент побед                 {f1.get('Home_WinRate_Last5', 0)*100:<14.1f}% {f2.get('Home_WinRate_Last5', 0)*100:<14.1f}%
-Разница голов                 {f1.get('Home_GoalDiff_Last5', 0):<15.2f} {f2.get('Home_GoalDiff_Last5', 0):<15.2f}
-Средние удары                 {f1.get('Home_AvgHS_Last5', 0):<15.2f} {f2.get('Home_AvgHS_Last5', 0):<15.2f}
-Удары в створ                 {f1.get('Home_AvgHST_Last5', 0):<15.2f} {f2.get('Home_AvgHST_Last5', 0):<15.2f}
-"""
+        📊 СРАВНЕНИЕ КОМАНД
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        
+        {team1} vs {team2}
+        
+        Показатель                    {team1:<15} {team2:<15}
+        {'─' * 60}
+        Средние голы (5 матчей)       {f1.get('Home_GoalsScored_Last5', 0):<15.2f} {f2.get('Home_GoalsScored_Last5', 0):<15.2f}
+        Пропускает голов              {f1.get('Home_GoalsConceded_Last5', 0):<15.2f} {f2.get('Home_GoalsConceded_Last5', 0):<15.2f}
+        Процент побед                 {f1.get('Home_WinRate_Last5', 0)*100:<14.1f}% {f2.get('Home_WinRate_Last5', 0)*100:<14.1f}%
+        Разница голов                 {f1.get('Home_GoalDiff_Last5', 0):<15.2f} {f2.get('Home_GoalDiff_Last5', 0):<15.2f}
+        Средние удары                 {f1.get('Home_AvgHS_Last5', 0):<15.2f} {f2.get('Home_AvgHS_Last5', 0):<15.2f}
+        Удары в створ                 {f1.get('Home_AvgHST_Last5', 0):<15.2f} {f2.get('Home_AvgHST_Last5', 0):<15.2f}
+        """
 
     def get_status(self) -> Dict:
         """Статус системы"""
@@ -246,13 +241,11 @@ class MatchCoordinator:
 
 
 if __name__ == "__main__":
-    # Настройка логирования
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    # Создание координатора
     coordinator = MatchCoordinator()
 
     if coordinator.initialize():

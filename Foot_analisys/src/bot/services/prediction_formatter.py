@@ -12,7 +12,6 @@ def format_quick_prediction(result: dict) -> str:
     away_goals = round(predictions.get('Target_FTAG', 1.2), 1)
     score = f"{int(round(home_goals))}:{int(round(away_goals))}"
 
-    # Вероятности
     goal_diff = home_goals - away_goals
     if goal_diff > 0.5:
         home_prob = min(85, 50 + goal_diff * 15)
@@ -42,24 +41,19 @@ def format_quick_prediction(result: dict) -> str:
     return report
 
 
-# services/prediction_formatter.py - БЕЗ ОКРУГЛЕНИЯ
-
 def format_detailed_prediction(result: dict) -> str:
     """Форматирует детальный прогноз с пояснениями, опираясь на ОКРУГЛЁННЫЙ счёт"""
     predictions = result['predictions']
     home_team = result['home_team']
     away_team = result['away_team']
 
-    # Сырые ожидания модели
     home_goals_raw = float(predictions.get('Target_FTHG', 1.5))
     away_goals_raw = float(predictions.get('Target_FTAG', 1.2))
 
-    # ОКРУГЛЁННЫЙ счёт — главный для результата
     home_goals_int = int(round(home_goals_raw))
     away_goals_int = int(round(away_goals_raw))
     score = f"{home_goals_int}:{away_goals_int}"
 
-    # Результат и голевая разница считаются по ОКРУГЛЁННЫМ голам
     if home_goals_int > away_goals_int:
         result_text = "Победа хозяев"
     elif away_goals_int > home_goals_int:
@@ -69,24 +63,20 @@ def format_detailed_prediction(result: dict) -> str:
 
     goal_diff_int = home_goals_int - away_goals_int
 
-    # Базовые вероятности для равных команд
     base_home = 45.0
     base_away = 30.0
     base_draw = 25.0
 
-    # Корректировка на разницу ОКРУГЛЁННЫХ голов
-    adjustment = goal_diff_int * 10.0  # 10% за гол разницы
+    adjustment = goal_diff_int * 10.0
 
     home_prob = base_home + adjustment
     away_prob = base_away - adjustment
     draw_prob = base_draw
 
-    # Ограничения 5–85% и базовый диапазон для ничьей
     home_prob = min(85.0, max(5.0, home_prob))
     away_prob = min(85.0, max(5.0, away_prob))
     draw_prob = max(5.0, min(70.0, draw_prob))
 
-    # Нормализация до 100%
     total = home_prob + away_prob + draw_prob
     home_prob = home_prob / total * 100.0
     away_prob = away_prob / total * 100.0
@@ -96,7 +86,6 @@ def format_detailed_prediction(result: dict) -> str:
     draw_prob = round(draw_prob)
     away_prob = round(away_prob)
 
-    # Остальная статистика по сырым значениям
     home_shots = float(predictions.get('Target_HS', 10))
     away_shots = float(predictions.get('Target_AS', 8))
     home_shots_target = float(predictions.get('Target_HST', 4))
@@ -178,42 +167,42 @@ def format_detailed_prediction(result: dict) -> str:
     expert_text = " ".join(expert_parts)
 
     report = f"""
-⚽️ <b>ПРОГНОЗ МАТЧА</b>
+        ⚽️ <b>ПРОГНОЗ МАТЧА</b>
+        
+        🏠 {home_team} vs ✈️ {away_team}
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━
+        🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
+        
+        Счёт: {score}
+        Результат: {result_text}
+        
+        Вероятности:
+          🏠 Победа хозяев: {home_prob:.0f}%
+          🤝 Ничья: {draw_prob:.0f}%
+          ✈️ Победа гостей: {away_prob:.0f}%
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━
+        📊 <b>СТАТИСТИКА (ожидания модели)</b>
+        
+        ⚽️ Голы (сырые): {home_goals_raw:.3f} — {away_goals_raw:.3f}
+        🎯 Удары: {home_shots:.3f} — {away_shots:.3f}
+        🔵 В створ: {home_shots_target:.3f} — {away_shots_target:.3f}
+        🎯 Точность ударов: {home_shot_acc:.1f}% — {away_shot_acc:.1f}%
+        🚩 Угловые: {home_corners:.3f} — {away_corners:.3f}
+        ⚠️ Фолы: {home_fouls:.3f} — {away_fouls:.3f}
+        🟨 Жёлтые: {home_yellows:.3f} — {away_yellows:.3f}
+        🟥 Красные: {home_reds:.3f} — {away_reds:.3f}
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━
+        ⚡️ <b>КЛЮЧЕВЫЕ МОМЕНТЫ</b>
+        
+        {key_moments_text}
+        
+        ━━━━━━━━━━━━━━━━━━━━━━━━
+        💡 <b>КРАТКИЙ АНАЛИЗ</b>
 
-🏠 {home_team} vs ✈️ {away_team}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
-
-Счёт: {score}
-Результат: {result_text}
-
-Вероятности:
-  🏠 Победа хозяев: {home_prob:.0f}%
-  🤝 Ничья: {draw_prob:.0f}%
-  ✈️ Победа гостей: {away_prob:.0f}%
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-📊 <b>СТАТИСТИКА (ожидания модели)</b>
-
-⚽️ Голы (сырые): {home_goals_raw:.3f} — {away_goals_raw:.3f}
-🎯 Удары: {home_shots:.3f} — {away_shots:.3f}
-🔵 В створ: {home_shots_target:.3f} — {away_shots_target:.3f}
-🎯 Точность ударов: {home_shot_acc:.1f}% — {away_shot_acc:.1f}%
-🚩 Угловые: {home_corners:.3f} — {away_corners:.3f}
-⚠️ Фолы: {home_fouls:.3f} — {away_fouls:.3f}
-🟨 Жёлтые: {home_yellows:.3f} — {away_yellows:.3f}
-🟥 Красные: {home_reds:.3f} — {away_reds:.3f}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-⚡️ <b>КЛЮЧЕВЫЕ МОМЕНТЫ</b>
-
-{key_moments_text}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-💡 <b>КРАТКИЙ АНАЛИЗ</b>
-
-{expert_text}
-"""
+        {expert_text}
+        """
 
     return report

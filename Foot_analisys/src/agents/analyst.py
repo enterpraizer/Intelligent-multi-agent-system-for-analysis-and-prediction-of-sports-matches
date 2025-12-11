@@ -15,7 +15,6 @@ class AnalystAgent:
     def __init__(self):
         PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-        # Формируем путь к файлу относительно корня проекта
         self.data_path: str = str(PROJECT_ROOT / "data" / "processed" / "all_matches.csv")
         self.df_matches = None
         self.league = ['Bundes Ligue','EPL','Ligue1','LL','Serie A']
@@ -37,7 +36,7 @@ class AnalystAgent:
 
         logger.info(f"Строю фичи для {home_team} vs {away_team}")
 
-        # берём все прошедшие матчи (на всякий случай)
+        # берём все прошедшие матчи
         df_hist = self.df_matches.sort_values('Date')
 
         # Elo: берём последний матч каждой команды и её рейтинг там
@@ -54,7 +53,6 @@ class AnalystAgent:
             home_elo = 1500.0
             away_elo = 1500.0
         else:
-            # В all_matches у тебя Elo уже считается как рейтинг команды в конкретном матче
             # Если команда была дома, берём Home_Elo, если в гостях — Away_Elo
             last_home_row = home_last.iloc[0]
             if last_home_row['HomeTeam'] == home_team:
@@ -70,7 +68,7 @@ class AnalystAgent:
 
         diff_elo = home_elo - away_elo
 
-        # Фичи для домашней команды
+
         home_features = self._get_team_features(home_team, last_n, prefix='Home')
 
         # Фичи для гостевой команды
@@ -91,7 +89,7 @@ class AnalystAgent:
         features.update(away_features)
         features.update(h2h_features)
 
-        """# Применяем веса только к голам и ударам (как было)
+        """
         weighted_stats = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']
         weighted_features = {}
         for col, val in features.items():
@@ -109,7 +107,6 @@ class AnalystAgent:
 
     def _get_team_features(self, team: str, last_n: int, prefix: str) -> Dict:
         """Вычисляет средние показатели команды за последние N матчей"""
-        # Находим последние N матчей команды (дома и в гостях)
         print(team)
         last_matches = self.df_matches[
             (self.df_matches['HomeTeam'] == team) | (self.df_matches['AwayTeam'] == team)
@@ -128,15 +125,12 @@ class AnalystAgent:
 
             for _, row in last_matches.iterrows():
                 if row['HomeTeam'] == team:
-                    # Команда играла дома
                     values.append(row.get(stat, 0))
                 elif row['AwayTeam'] == team:
-                    # Команда играла в гостях
-                    # Заменяем H на A и наоборот, чтобы брать "свою" статистику
                     if stat.startswith('H'):
-                        alt_stat = 'A' + stat[1:]  # например, HS → AS
+                        alt_stat = 'A' + stat[1:]
                     elif stat.startswith('A'):
-                        alt_stat = 'H' + stat[1:]  # например, AS → HS
+                        alt_stat = 'H' + stat[1:]
                     elif stat == 'FTHG':
                         alt_stat = 'FTAG'
                     elif stat == 'FTAG':
@@ -145,12 +139,10 @@ class AnalystAgent:
                         alt_stat = stat
                     values.append(row.get(alt_stat, 0))
 
-            # Среднее значение
             avg_val = np.mean(values) if values else 0.0
             features[f'{prefix}_{stat}_avg'] = round(avg_val, 2)
 
-        """# Дополнительные метрики
-        # Форма команды (процент побед)
+        """
         wins = sum(1 for _, row in last_matches.iterrows()
                    if (row['HomeTeam'] == team and row.get('FTHG', 0) > row.get('FTAG', 0)) or
                    (row['AwayTeam'] == team and row.get('FTAG', 0) > row.get('FTHG', 0)))
@@ -192,7 +184,7 @@ class AnalystAgent:
         # Количество матчей
         features[f'H2H_MatchesPlayed'] = len(h2h_matches)
 
-        # Победы, ничьи
+        # Победы и ничьи
         home_wins = sum(1 for _, row in h2h_matches.iterrows()
                         if (row['HomeTeam'] == home_team and row.get('FTHG', 0) > row.get('FTAG', 0)) or
                         (row['AwayTeam'] == home_team and row.get('FTAG', 0) > row.get('FTHG', 0)))
@@ -213,14 +205,13 @@ class AnalystAgent:
 
         stats_to_calc = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR']
 
-        # Итерируем по всем статистикам
         for stat in stats_to_calc:
             home_total = 0
             away_total = 0
 
             for _, match in h2h_matches.iterrows():
                 if match['HomeTeam'] == home_team:
-                    home_total += match.get(stat, 0)  # берём значение для хозяев
+                    home_total += match.get(stat, 0)
                     away_total += match.get(stat, 0) if stat != 'FTHG' and stat != 'FTAG' else match.get(stat, 0)
                 elif match['AwayTeam'] == home_team:
                     home_total += match.get(stat, 0) if stat != 'FTHG' and stat != 'FTAG' else match.get(stat, 0)
@@ -229,7 +220,6 @@ class AnalystAgent:
                 elif match['AwayTeam'] == away_team:
                     away_total += match.get(stat, 0)
 
-            # Среднее значение по H2H
             if len(h2h_matches) > 0:
                 features[f'H2H_{stat}_avg'] = round(home_total / len(h2h_matches), 2)
                 features[f'H2H_{stat}_avg'] = round(away_total / len(h2h_matches), 2)

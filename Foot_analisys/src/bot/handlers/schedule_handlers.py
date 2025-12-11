@@ -64,7 +64,7 @@ async def show_upcoming_matches(update: Update, context: ContextTypes.DEFAULT_TY
                 text += f"  ❌ Прогноз недоступен\n\n"
 
             match_count += 1
-            if match_count >= 15:  # Ограничиваем количество матчей
+            if match_count >= 15:
                 text += "\n... и другие матчи"
                 break
 
@@ -145,5 +145,4 @@ async def show_league_schedule(update: Update, context: ContextTypes.DEFAULT_TYP
 
 def register_schedule_handlers(app):
     """Регистрирует обработчики расписания"""
-    # Обработчики расписания регистрируются через CallbackQueryHandler в главном файле
     pass

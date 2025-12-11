@@ -75,7 +75,6 @@ async def show_all_teams(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать все команды по лигам"""
     leagues = team_stats_service.get_all_teams_by_league()
 
-    # Создаем меню выбора лиги
     keyboard = []
     for league_name in ["EPL", "LL", "Bundes Ligue", "Serie A", "Ligue1", "Other"]:
         if leagues[league_name]:
@@ -104,7 +103,6 @@ async def show_teams_by_league(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
 
-    # Создаем пагинацию (по 15 команд на страницу)
     teams_list = list(teams.items())
     page = context.user_data.get('teams_page', 0)
     start_idx = page * 15
@@ -124,7 +122,6 @@ async def show_teams_by_league(update: Update, context: ContextTypes.DEFAULT_TYP
 
         keyboard.append(row)
 
-    # Кнопки навигации
     nav_buttons = []
     if page > 0:
         nav_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"stats_league_{league_name}_page_{page-1}"))
@@ -148,7 +145,6 @@ async def show_teams_by_league(update: Update, context: ContextTypes.DEFAULT_TYP
         parse_mode='HTML'
     )
 
-    # Сохраняем текущую страницу
     context.user_data['teams_page'] = page
 
 async def handle_league_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -157,10 +153,8 @@ async def handle_league_page(update: Update, context: ContextTypes.DEFAULT_TYPE)
     league_name = parts[2]
     page = int(parts[4])
 
-    # Обновляем страницу в user_data
     context.user_data['teams_page'] = page
 
-    # Показываем команды с новой страницей
     await show_teams_by_league(update, context)
 
 async def start_team_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -171,8 +165,6 @@ async def start_team_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<i>Примеры: Manchester United, Barcelona, Bayern Munich</i>",
         parse_mode='HTML'
     )
-
-    # Устанавливаем состояние поиска
     context.user_data['waiting_for_team_search'] = True
 
 async def handle_team_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -190,13 +182,11 @@ async def handle_team_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return
 
-    # Показываем загрузку
     search_msg = await update.message.reply_text(
         f"🔍 Ищу команды по запросу: <b>{query}</b>...",
         parse_mode='HTML'
     )
 
-    # Ищем команды
     teams = team_stats_service.search_teams(query)
 
     if not teams:
@@ -209,9 +199,8 @@ async def handle_team_search(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data['waiting_for_team_search'] = False
         return
 
-    # Создаем клавиатуру с результатами
     keyboard = []
-    for team in teams[:8]:  # Ограничиваем количество результатов
+    for team in teams[:8]:
         button_text = f"🏴 {team['name']}"
         if team.get('league') and team['league'] != 'Other':
             button_text += f" ({team['league']})"
@@ -239,7 +228,6 @@ async def show_team_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     team_id = int(query.data.split('_')[2])
     user_id = query.from_user.id
 
-    # Показываем загрузку
     await query.edit_message_text(
         "📊 <b>Загрузка статистики...</b>\n\n"
         "⏳ Получаю данные о команде...",
@@ -247,7 +235,6 @@ async def show_team_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     try:
-        # Получаем статистику
         stats = team_stats_service.get_team_stats(team_id)
 
         if not stats:
@@ -278,7 +265,6 @@ async def show_team_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             favorite_button_text = "⭐ Добавить в избранное"
 
-        # Кнопки навигации
         keyboard = [
             [InlineKeyboardButton(favorite_button_text, callback_data=f"favorite_toggle_{team_id}")],
             [InlineKeyboardButton("🔄 Обновить", callback_data=f"stats_team_{team_id}")],
@@ -375,7 +361,7 @@ def format_team_stats_report(team_info, standing, form_stats, series, home_away,
     report += "\n⚽ <b>Последние 5 матчей</b>\n"
     if matches and len(matches) >= 5:
         last_5_matches = matches[-5:]
-        for m in reversed(last_5_matches):  # Показываем от самых свежих к старым
+        for m in reversed(last_5_matches):
             dt = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
             home_team = m["homeTeam"]["name"]
             away_team = m["awayTeam"]["name"]
@@ -402,5 +388,4 @@ def format_team_stats_report(team_info, standing, form_stats, series, home_away,
 
 def register_stats_handlers(app):
     """Регистрирует обработчики статистики"""
-    # Обработчики регистрируются через CallbackQueryHandler в главном файле
     pass

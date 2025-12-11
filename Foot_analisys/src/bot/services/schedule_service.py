@@ -17,7 +17,6 @@ class ScheduleService:
             "X-Auth-Token": self.API_TOKEN
         }
 
-        # Соответствие названий лиг их ID в football-data.org
         self.LEAGUE_IDS = {
             "EPL": "PL",           # Premier League
             "LL": "PD",            # La Liga
@@ -26,7 +25,6 @@ class ScheduleService:
             "Ligue1": "FL1"        # Ligue 1
         }
 
-        # Маппинг для обратного соответствия
         self.LEAGUE_NAMES = {v: k for k, v in self.LEAGUE_IDS.items()}
 
     def get_upcoming_matches(self, league_code, limit=10):
@@ -43,7 +41,6 @@ class ScheduleService:
             data = response.json()
             matches = data.get("matches", [])
 
-            # Сортируем по дате и ограничиваем количество
             matches = sorted(matches, key=lambda m: m["utcDate"])
             return matches[:limit]
 
@@ -62,7 +59,6 @@ class ScheduleService:
                 match['league_code'] = code
                 all_matches.append(match)
 
-        # Сортируем все матчи по дате
         return sorted(all_matches, key=lambda m: m["utcDate"])
 
     def format_match_for_display(self, match):
@@ -74,7 +70,6 @@ class ScheduleService:
         from datetime import timedelta
         date = date + timedelta(hours=3)
 
-        # Пробуем преобразовать названия команд
         mapped_home, mapped_away, success, error = team_mapper.validate_mapping(home_team, away_team)
 
         return {
@@ -120,10 +115,6 @@ class ScheduleService:
     def get_matches_with_valid_mapping(self, league_name):
         """
         Получить матчи лиги только с успешным маппингом названий
-
-        Returns:
-            list: Матчи с успешным маппингом
-            list: Матчи с ошибками маппинга (для отладки)
         """
         matches = self.get_matches_by_league(league_name)
         valid_matches = []
@@ -137,5 +128,5 @@ class ScheduleService:
 
         return valid_matches, invalid_matches
 
-# Глобальный экземпляр сервиса
+
 schedule_service = ScheduleService()

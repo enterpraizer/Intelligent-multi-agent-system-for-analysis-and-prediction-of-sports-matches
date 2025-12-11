@@ -15,7 +15,6 @@ def get_team_matches(team_id, status="FINISHED"):
     url = f"{BASE_URL}/teams/{team_id}/matches"
     params = {"status": status}
     matches = requests.get(url, headers=headers, params=params).json().get("matches", [])
-    # Сортировка по дате
     matches.sort(key=lambda m: m["utcDate"])
     return matches
 
@@ -31,7 +30,7 @@ def get_team_standing(team_id, competition_code):
 
 
 def calc_form(matches):
-    """Форма, очки, средние голы и clean sheets для последних 5 матчей"""
+    """Форма, очки, средние голы для последних 5 матчей"""
     last_matches = matches[-5:]  # последние 5 матчей
     stats = {"form": "", "points": 0, "wins": 0, "draws": 0, "losses": 0,
              "goals_for": 0, "goals_against": 0, "clean_sheets": 0}
@@ -93,7 +92,7 @@ def calc_series(matches):
 
 
 def calc_home_away_stats(matches):
-    """Раздельная статистика дома/в гостях для последних 5 матчей"""
+    """Раздельная статистика дома и в гостях для последних 5 матчей"""
     last_matches = matches[-5:]
     stats = {"home": {"W":0,"D":0,"L":0,"GF":0,"GA":0,"CS":0},
              "away": {"W":0,"D":0,"L":0,"GF":0,"GA":0,"CS":0}}
@@ -136,7 +135,6 @@ def print_team_stats(team_id, competition_code):
     print(f"Клубные цвета: {team.get('clubColors')}")
     print(f"Веб-сайт: {team.get('website')}")
 
-    # Позиция в таблице
     standing = get_team_standing(team_id, competition_code)
     if standing:
         print(f"\nПозиция в таблице: {standing['position']} из {standing['playedGames']}")
@@ -172,8 +170,7 @@ def print_team_stats(team_id, competition_code):
         print(f"{dt:%Y-%m-%d} — {home} {score['home']}:{score['away']} {away}")
 
 
-# === Пример использования ===
 if __name__ == "__main__":
-    team_id = 66  # Manchester United
-    competition_code = "PL"  # Premier League
+    team_id = 66
+    competition_code = "PL"
     print_team_stats(team_id, competition_code)

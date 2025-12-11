@@ -1,4 +1,3 @@
-# src/ml/train_models.py
 import os
 import pandas as pd
 from catboost import CatBoostRegressor
@@ -8,13 +7,10 @@ from sklearn.metrics import mean_absolute_error
 def train_all_models(dataset_path: str, models_dir: str):
     os.makedirs(models_dir, exist_ok=True)
 
-    # Загружаем датасет
     df = pd.read_csv(dataset_path, parse_dates=['Date'], dayfirst=True)
 
-    # Сортировка по времени — важно!
     df = df.sort_values("Date").reset_index(drop=True)
 
-    # Все признаки: Home_*_avg, Away_*_avg, H2H_*_avg
     feature_cols = [
         col for col in df.columns
         if col.startswith(("Home_", "Away_", "H2H_")) and col.endswith("_avg")
@@ -22,7 +18,6 @@ def train_all_models(dataset_path: str, models_dir: str):
 
     feature_cols += ["Home_Elo", "Away_Elo", "Diff_Elo"]
 
-    # Все таргеты
     target_cols = [
         "Target_FTHG", "Target_FTAG",
         "Target_HS", "Target_AS",
@@ -34,14 +29,11 @@ def train_all_models(dataset_path: str, models_dir: str):
     ]
 
 
-
-    # Удаляем строки, где нет данных
     df = df.dropna(subset=feature_cols + target_cols).reset_index(drop=True)
 
     print(f"Матчей после очистки: {len(df)}")
     print(f"Количество фичей: {len(feature_cols)}")
 
-    # Веса применяем только к голам и ударам
     weighted_stats = ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']
     for col in feature_cols:
         for stat in weighted_stats:
@@ -50,9 +42,8 @@ def train_all_models(dataset_path: str, models_dir: str):
                     df[col] = df[col] * 0.7
                 elif col.startswith("Home_") or col.startswith("Away_"):
                     df[col] = df[col] * 0.3
-                break  # нашли, больше не проверяем
+                break
 
-    # TIME-BASED TRAIN/TEST SPLIT
     train_size = int(len(df) * 0.8)
     train = df.iloc[:train_size]
     test = df.iloc[train_size:]
@@ -68,7 +59,6 @@ def train_all_models(dataset_path: str, models_dir: str):
         X_test = test[feature_cols]
         y_test = test[target]
 
-        # CatBoost — лучшая модель для футбольных данных
         model = CatBoostRegressor(
             iterations=600,
             depth=8,
@@ -85,7 +75,6 @@ def train_all_models(dataset_path: str, models_dir: str):
 
         print(f"MAE: {mae:.4f}")
 
-        # Сохраняем модель
         model_path = os.path.join(models_dir, f"{target}.cbm")
         model.save_model(model_path)
 

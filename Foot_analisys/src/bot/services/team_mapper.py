@@ -1,6 +1,3 @@
-"""
-Упрощенный маппинг названий команд без внешних зависимостей
-"""
 import logging
 import re
 
@@ -8,7 +5,6 @@ logger = logging.getLogger(__name__)
 
 class SimpleTeamMapper:
     def __init__(self):
-        # Список команд из вашего датасета
         self.dataset_teams = [
             "Ajaccio", "Ajaccio GFCO", "Alaves", "Almeria", "Amiens", "Angers", "Arsenal", "Aston Villa",
             "Atalanta", "Ath Bilbao", "Ath Madrid", "Augsburg", "Auxerre", "Barcelona", "Bastia",
@@ -35,7 +31,6 @@ class SimpleTeamMapper:
             "Watford", "Werder Bremen", "West Brom", "West Ham", "Wolfsburg", "Wolves"
         ]
 
-        # team_mapper.py - расширим mappings
         self.mappings = {
             # Английская Премьер-лига
             "Manchester City": "Man City",
@@ -277,5 +272,5 @@ class SimpleTeamMapper:
 
         return mapped_home, mapped_away, True, None
 
-# Глобальный экземпляр маппера
+
 team_mapper = SimpleTeamMapper()

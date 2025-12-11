@@ -13,7 +13,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Инициализация координатора
+
 coordinator = MatchCoordinator(use_llm=False)
 COORDINATOR_READY = False
 
@@ -29,7 +29,7 @@ def init_coordinator():
             logger.error("❌ Ошибка инициализации координатора")
     return COORDINATOR_READY
 
-# ⚡ Быстрый прогноз (выбор из расписания)
+#Быстрый прогноз
 async def start_quick_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Начало быстрого прогноза из расписания"""
     keyboard = []
@@ -52,7 +52,7 @@ async def start_quick_prediction(update: Update, context: ContextTypes.DEFAULT_T
         parse_mode='HTML'
     )
 
-# 📊 Детальный прогноз (выбор из расписания)
+#Детальный прогноз
 async def start_detailed_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Начало детального прогноза из расписания"""
     keyboard = []
@@ -75,17 +75,7 @@ async def start_detailed_prediction(update: Update, context: ContextTypes.DEFAUL
         parse_mode='HTML'
     )
 
-# 🤖 Прогноз LLM (заглушка)
-async def start_llm_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Начало LLM прогноза"""
-    await update.callback_query.edit_message_text(
-        "🤖 <b>Прогноз LLM</b>\n\n"
-        "Эта функция находится в разработке.\n"
-        "В будущем здесь будет расширенный анализ с использованием искусственного интеллекта.",
-        parse_mode='HTML'
-    )
-
-# 📅 Выбор конкретного матча из расписания лиги для быстрого прогноза
+# Выбор конкретного матча из расписания лиги для быстрого прогноза
 async def show_league_matches_for_quick_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать матчи лиги для выбора быстрого прогноза"""
     league_idx = int(update.callback_query.data.split('_')[2])
@@ -93,7 +83,6 @@ async def show_league_matches_for_quick_prediction(update: Update, context: Cont
     league_name = leagues[league_idx]
 
     try:
-        # Получаем только матчи с успешным маппингом
         valid_matches, invalid_matches = schedule_service.get_matches_with_valid_mapping(league_name)
 
         if not valid_matches:
@@ -126,7 +115,7 @@ async def show_league_matches_for_quick_prediction(update: Update, context: Cont
             parse_mode='HTML'
         )
 
-# 📅 Выбор конкретного матча из расписания лиги для детального прогноза
+# Выбор конкретного матча из расписания лиги для детального прогноза
 async def show_league_matches_for_detailed_prediction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать матчи лиги для выбора детального прогноза"""
     league_idx = int(update.callback_query.data.split('_')[2])
@@ -176,7 +165,6 @@ async def process_match_selection(update: Update, context: ContextTypes.DEFAULT_
     home_team = parts[2]
     away_team = parts[3]
 
-    # Пробуем преобразовать названия команд
     mapped_home, mapped_away, success, error = team_mapper.validate_mapping(home_team, away_team)
 
     if not success:
@@ -195,7 +183,6 @@ async def process_match_selection(update: Update, context: ContextTypes.DEFAULT_
     context.user_data['original_away_team'] = away_team
     context.user_data['prediction_type'] = prediction_type
 
-    # Показываем "загрузку" с преобразованными названиями
     type_icon = "⚡" if prediction_type == 'quick' else "📊"
     type_name = "Быстрый прогноз" if prediction_type == 'quick' else "Детальный прогноз"
 
@@ -206,7 +193,7 @@ async def process_match_selection(update: Update, context: ContextTypes.DEFAULT_
         f"⏳ Анализирую данные..."
     )
 
-    # ДЕЛАЕМ ПРОГНОЗ с преобразованными названиями
+#делаем прогноз с преобразованными названиями
     try:
         if not init_coordinator():
             await query.edit_message_text("❌ Ошибка инициализации системы.")
@@ -256,7 +243,6 @@ async def save_user_prediction_handler(update: Update, context: ContextTypes.DEF
     home_team = parts[2]
     away_team = parts[3]
 
-    # Сохраняем прогноз
     user_id = query.from_user.id
     save_user_prediction(user_id, home_team, away_team, "пользовательский")
 
@@ -268,7 +254,7 @@ async def save_user_prediction_handler(update: Update, context: ContextTypes.DEF
         parse_mode='HTML'
     )
 
-# Команда /teams
+
 async def list_teams(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /teams - показать все доступные команды"""
     if not init_coordinator():
@@ -292,7 +278,7 @@ async def list_teams(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(teams_text)
 
-# Команда /status
+
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /status - показать статус системы"""
     if not init_coordinator():
@@ -302,15 +288,15 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status_info = coordinator.get_status()
 
     status_text = f"""
-📊 Статус системы:
-
-{'✅' if status_info['initialized'] else '❌'} Инициализация
-{'✅' if status_info['data_loaded'] else '❌'} Данные загружены
-🤖 Моделей загружено: {status_info['models_loaded']}
-{'✅' if status_info['llm_enabled'] else '📝'} Генерация отчетов: {'LLM' if status_info['llm_enabled'] else 'Шаблоны'}
-
-Команд в базе: {len(coordinator.get_team_list())}
-"""
+        📊 Статус системы:
+        
+        {'✅' if status_info['initialized'] else '❌'} Инициализация
+        {'✅' if status_info['data_loaded'] else '❌'} Данные загружены
+        🤖 Моделей загружено: {status_info['models_loaded']}
+        {'✅' if status_info['llm_enabled'] else '📝'} Генерация отчетов: {'LLM' if status_info['llm_enabled'] else 'Шаблоны'}
+        
+        Команд в базе: {len(coordinator.get_team_list())}
+        """
 
     await update.message.reply_text(status_text)
 
@@ -385,7 +371,6 @@ async def process_llm_analysis(update: Update, context: ContextTypes.DEFAULT_TYP
     home_team = parts[2]
     away_team = parts[3]
 
-    # Преобразуем названия команд
     mapped_home, mapped_away, success, error = team_mapper.validate_mapping(home_team, away_team)
 
     if not success:
@@ -431,25 +416,25 @@ async def process_llm_analysis(update: Update, context: ContextTypes.DEFAULT_TYP
 
         # Форматируем финальный отчет
         report = f"""
-🤖 <b>ГЛУБОКИЙ АНАЛИЗ МАТЧА</b>
+            🤖 <b>ГЛУБОКИЙ АНАЛИЗ МАТЧА</b>
+            
+            🏠 {mapped_home} vs ✈️ {mapped_away}
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━
+            🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
+            
+            {main_prediction}
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━
+            🧠 <b>AI АНАЛИЗ</b>
+            
+            {analysis}
+            
+            ━━━━━━━━━━━━━━━━━━━━━━━━
+            💡 <i>Анализ создан с помощью DeepSeek R1 Chimera</i>
+            """
 
-🏠 {mapped_home} vs ✈️ {mapped_away}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 <b>ОСНОВНОЙ ПРОГНОЗ</b>
-
-{main_prediction}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 <b>AI АНАЛИЗ</b>
-
-{analysis}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-💡 <i>Анализ создан с помощью DeepSeek R1 Chimera</i>
-"""
-
-        # Проверяем длину сообщения (Telegram лимит 4096 символов)
+        # Проверяем длину сообщения
         if len(report) > 4000:
             report = report[:4000] + "\n\n... (сообщение сокращено)"
 

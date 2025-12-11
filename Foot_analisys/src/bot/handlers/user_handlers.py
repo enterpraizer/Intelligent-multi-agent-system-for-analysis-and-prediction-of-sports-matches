@@ -49,5 +49,4 @@ async def show_prediction_history(update: Update, context: ContextTypes.DEFAULT_
 
 def register_user_handlers(app):
     """Регистрирует обработчики пользовательских данных"""
-    # Обработчики пользовательских данных регистрируются через CallbackQueryHandler
     pass

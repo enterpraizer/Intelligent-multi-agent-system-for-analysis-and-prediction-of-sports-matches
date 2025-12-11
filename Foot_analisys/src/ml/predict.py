@@ -1,4 +1,3 @@
-{"id":"58392","variant":"standard","title":"MatchPredictor (CatBoost)"}
 import os
 import joblib
 import pandas as pd
@@ -13,7 +12,6 @@ class MatchPredictor:
 
     def __init__(self, models_dir=None):
 
-        # Ищем корень проекта по папке models_catboost
         if models_dir is None:
             curr_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -48,7 +46,7 @@ class MatchPredictor:
 
     def _load_models(self):
         """Загружаем все модели CatBoost (*.cbm)"""
-        print(f"🔍 Загружаем модели из: {self.models_dir}")
+        print(f"Загружаем модели из: {self.models_dir}")
 
         for target in self.target_cols:
             model_path = os.path.join(self.models_dir, f"{target}.cbm")
@@ -57,9 +55,9 @@ class MatchPredictor:
                 model = CatBoostRegressor()
                 model.load_model(model_path)
                 self.models[target] = model
-                print(f"✅ {target} загружена")
+                print(f"{target} загружена")
             else:
-                print(f"⚠️ Модель {target} не найдена ({model_path})")
+                print(f"Модель {target} не найдена ({model_path})")
 
     def _extract_feature_cols(self, df: pd.DataFrame):
         cols = [

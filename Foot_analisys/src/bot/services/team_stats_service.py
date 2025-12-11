@@ -14,7 +14,6 @@ class TeamStatsService:
         self.BASE_URL = "https://api.football-data.org/v4"
         self.headers = {"X-Auth-Token": self.API_TOKEN}
 
-        # ПОЛНАЯ БАЗА ID ДЛЯ ВСЕХ 164 КОМАНД ИЗ ДАТАСЕТА
         self.all_teams = {
             # Английская Премьер-лига
             "Arsenal": 57,
@@ -190,7 +189,6 @@ class TeamStatsService:
             "West Brom": 74
         }
 
-        # ID популярных команд для быстрого доступа
         self.popular_teams = {
             "Man United": 66,
             "Man City": 65,
@@ -209,7 +207,6 @@ class TeamStatsService:
             "PSG": 524
         }
 
-        # Соответствие лиг
         self.LEAGUE_CODES = {
             "EPL": "PL",
             "LL": "PD",
@@ -221,7 +218,6 @@ class TeamStatsService:
     def search_teams(self, query: str):
         """Поиск команд по названию"""
         try:
-            # Сначала ищем в локальной базе
             local_results = []
             query_lower = query.lower()
 
@@ -235,11 +231,9 @@ class TeamStatsService:
                         'league': self._get_team_league_by_name(team_name)
                     })
 
-            # Если есть локальные результаты, возвращаем их
             if local_results:
                 return local_results[:8]
 
-            # Если нет локальных результатов, ищем через API
             url = f"{self.BASE_URL}/teams"
             params = {"name": query}
             response = requests.get(url, headers=self.headers, params=params)
@@ -251,7 +245,6 @@ class TeamStatsService:
             data = response.json()
             teams = data.get("teams", [])
 
-            # Фильтруем и форматируем результаты
             formatted_teams = []
             for team in teams:
                 formatted_teams.append({
@@ -262,7 +255,7 @@ class TeamStatsService:
                     'league': self._get_team_league(team)
                 })
 
-            return formatted_teams[:8]  # Ограничиваем количество результатов
+            return formatted_teams[:8]
 
         except Exception as e:
             logger.error(f"Ошибка поиска команд: {e}")
@@ -270,7 +263,6 @@ class TeamStatsService:
 
     def _get_team_league_by_name(self, team_name: str):
         """Определяет лигу команды по названию"""
-        # Простая логика определения лиги по названию команды
         epl_teams = ["Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton",
                      "Burnley", "Chelsea", "Crystal Palace", "Everton", "Fulham",
                      "Liverpool", "Luton", "Man City", "Man United", "Newcastle",
@@ -445,7 +437,7 @@ class TeamStatsService:
 
     def calc_home_away_stats(self, matches, team_id):
         """Статистика дома/в гостях"""
-        last_matches = matches[-10:]  # Берем больше матчей для статистики
+        last_matches = matches[-10:]
         stats = {
             "home": {"W":0, "D":0, "L":0, "GF":0, "GA":0, "CS":0},
             "away": {"W":0, "D":0, "L":0, "GF":0, "GA":0, "CS":0}
@@ -484,14 +476,13 @@ class TeamStatsService:
             team = self.get_team_info(team_id)
             matches = self.get_team_matches(team_id)
 
-            # Если лига не указана, пытаемся определить
             if not competition_code:
                 competition_code = self._get_team_league(team)
                 competition_code = self.LEAGUE_CODES.get(competition_code, "PL")
 
             stats = {
                 'team_info': team,
-                'matches': matches,  # Убедитесь что матчи включены
+                'matches': matches,
                 'standing': self.get_team_standing(team_id, competition_code),
                 'form': self.calc_form(matches, team_id),
                 'series': self.calc_series(matches, team_id),
@@ -504,5 +495,4 @@ class TeamStatsService:
             logger.error(f"Ошибка получения статистики команды {team_id}: {e}")
             return None
 
-# Глобальный экземпляр сервиса
 team_stats_service = TeamStatsService()
